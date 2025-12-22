@@ -8,11 +8,12 @@ import {
   DragEndEvent,
   DragOverEvent,
   DragStartEvent,
-  rectIntersection,
+  pointerWithin,
   PointerSensor,
   useSensor,
   useSensors,
   DragOverlay,
+  useDroppable,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -41,6 +42,24 @@ interface PageTreeProps {
 // Special drop zone for moving items to root level (implicit when dragging far left)
 const ROOT_DROP_ID = "__ROOT_DROP_ZONE__";
 
+// A droppable element on the left side that accepts drops to move items to root level
+function RootDropZone({ isActive }: { isActive: boolean }) {
+  const { setNodeRef, isOver } = useDroppable({ id: ROOT_DROP_ID });
+
+  if (!isActive) return null;
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "absolute left-0 top-0 bottom-0 w-5 z-10", // 20px wide strip for root drop zone
+        isOver && "bg-blue-100/50 dark:bg-blue-900/30"
+      )}
+      data-root-drop-zone
+    />
+  );
+}
+
 type DropPosition = "before" | "after" | "on";
 
 type DropTarget = {
@@ -65,6 +84,8 @@ interface TreeItemProps {
   createParentId: string | null;
   isCreating: boolean;
   renderEditInput: () => React.ReactNode;
+  // For inline rename
+  editingId: string | null;
 }
 
 function SortableTreeItem({
@@ -83,6 +104,7 @@ function SortableTreeItem({
   createParentId,
   isCreating,
   renderEditInput,
+  editingId,
 }: TreeItemProps) {
   const {
     attributes,
@@ -163,16 +185,20 @@ function SortableTreeItem({
           />
         </button>
 
-        {/* Page title (clickable) */}
+        {/* Page title or inline rename input */}
         <div
-          className="flex flex-1 items-center gap-1.5 min-w-0 cursor-pointer"
-          onClick={(e) => {
+          className={cn(
+            "flex flex-1 items-center gap-1.5 min-w-0",
+            editingId !== node.id && "cursor-pointer"
+          )}
+          onClick={editingId === node.id ? undefined : (e) => {
             e.stopPropagation();
             onNavigate(node.id);
           }}
           role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
+          aria-label={node.title}
+          tabIndex={editingId === node.id ? -1 : 0}
+          onKeyDown={editingId === node.id ? undefined : (e) => {
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
               onNavigate(node.id);
@@ -180,7 +206,11 @@ function SortableTreeItem({
           }}
         >
           <FileText className="h-4 w-4 shrink-0 text-gray-400 dark:text-gray-500" />
-          <span className="flex-1 truncate text-gray-700 dark:text-gray-200">{node.title}</span>
+          {editingId === node.id ? (
+            renderEditInput()
+          ) : (
+            <span className="flex-1 truncate text-gray-700 dark:text-gray-200">{node.title}</span>
+          )}
         </div>
 
         {/* Actions menu */}
@@ -275,6 +305,7 @@ function SortableTreeItem({
                   createParentId={createParentId}
                   isCreating={isCreating}
                   renderEditInput={renderEditInput}
+                  editingId={editingId}
                 />
               ))}
             </SortableContext>
@@ -352,21 +383,34 @@ export function PageTree({ pages }: PageTreeProps) {
   }, [activeId, tree]);
 
   const getPointerPosition = (
-    activeRect: { left: number; top: number } | null,
+    activeRect: { left: number; top: number; width?: number; height?: number } | null,
     delta: { x: number; y: number } | null
   ) => {
+    // Primary: use drag start pointer + delta
     if (dragStartPointerRef.current && delta) {
       return {
         x: dragStartPointerRef.current.x + delta.x,
         y: dragStartPointerRef.current.y + delta.y,
       };
     }
+    // Fallback: use drag offset
     const offset = dragOffsetRef.current;
-    if (!activeRect || !offset) return null;
-    return {
-      x: activeRect.left + offset.x,
-      y: activeRect.top + offset.y,
-    };
+    if (activeRect && offset) {
+      return {
+        x: activeRect.left + offset.x,
+        y: activeRect.top + offset.y,
+      };
+    }
+    // Last resort: use activeRect center (for Playwright compatibility)
+    if (activeRect && delta) {
+      const centerX = activeRect.left + (activeRect.width ?? 0) / 2;
+      const centerY = activeRect.top + (activeRect.height ?? 0) / 2;
+      return {
+        x: centerX + delta.x,
+        y: centerY + delta.y,
+      };
+    }
+    return null;
   };
 
   const getDropPosition = (
@@ -585,7 +629,16 @@ export function PageTree({ pages }: PageTreeProps) {
     const activeRect = event.active.rect.current.translated ?? event.active.rect.current.initial;
     const pointer = getPointerPosition(activeRect, event.delta);
     const navRect = navRef.current?.getBoundingClientRect();
-    if (pointer && navRect && pointer.x < navRect.left + 16) {
+    // Root drop zone detection:
+    // 1. Pointer near left edge of nav (primary method)
+    // 2. Large leftward horizontal drag offset (fallback for Playwright/edge cases)
+    const horizontalOffset = dragStartPointerRef.current && pointer
+      ? pointer.x - dragStartPointerRef.current.x
+      : null;
+    const isRootZoneByPosition = pointer && navRect && pointer.x < navRect.left + 64;
+    const isRootZoneByOffset = horizontalOffset !== null && horizontalOffset < -100; // Dragged 100px+ left
+
+    if (isRootZoneByPosition || isRootZoneByOffset) {
       setDropTarget({ id: ROOT_DROP_ID, position: "on" });
       if (hoverExpandRef.current.timeout) {
         clearTimeout(hoverExpandRef.current.timeout);
@@ -595,6 +648,8 @@ export function PageTree({ pages }: PageTreeProps) {
       return;
     }
     if (!overId || overId === ROOT_DROP_ID) {
+      // Don't clear if we might be in root zone
+      if (dropTarget?.id === ROOT_DROP_ID) return;
       setDropTarget(null);
       if (hoverExpandRef.current.timeout) {
         clearTimeout(hoverExpandRef.current.timeout);
@@ -682,18 +737,26 @@ export function PageTree({ pages }: PageTreeProps) {
     document.body.style.cursor = "";
     const { active, over } = event;
 
-    if (!over || active.id === over.id) return;
-
     const activeRect = event.active.rect.current.translated ?? event.active.rect.current.initial;
     const pointer = getPointerPosition(activeRect, event.delta);
+    const navRect = navRef.current?.getBoundingClientRect();
+
+    // Check for root drop zone BEFORE early return (handles case where over is null)
+    // Use both position-based and offset-based detection for robustness
+    const finalHorizontalOffset = dragStartPointerRef.current && pointer
+      ? pointer.x - dragStartPointerRef.current.x
+      : null;
+
+    // Clear refs after using them
     dragOffsetRef.current = null;
     dragStartPointerRef.current = null;
-    const navRect = navRef.current?.getBoundingClientRect();
+
     const dropToRoot = currentDropTarget?.id === ROOT_DROP_ID ||
-      (pointer && navRect && pointer.x < navRect.left + 16);
+      (pointer && navRect && pointer.x < navRect.left + 64) ||
+      (finalHorizontalOffset !== null && finalHorizontalOffset < -100);
 
     // Handle drop on root zone - move to root level
-    if (over.id === ROOT_DROP_ID || dropToRoot) {
+    if (dropToRoot || over?.id === ROOT_DROP_ID) {
       try {
         await reorderNote(active.id as string, {
           parent_id: null,
@@ -709,6 +772,9 @@ export function PageTree({ pages }: PageTreeProps) {
       }
       return;
     }
+
+    // Early return if no valid drop target or dropping on self
+    if (!over || active.id === over.id) return;
 
     // Cannot drop onto self or own descendants
     if (invalidTargets.has(over.id as string)) {
@@ -800,48 +866,42 @@ export function PageTree({ pages }: PageTreeProps) {
       <DndContext
         id={dndContextId}
         sensors={sensors}
-        collisionDetection={rectIntersection}
+        collisionDetection={pointerWithin}
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDragCancel={handleDragCancel}
         onDragEnd={handleDragEnd}
       >
-        <nav ref={navRef} className="flex-1 overflow-y-auto p-2">
+        <nav ref={navRef} className="relative flex-1 overflow-y-auto p-2">
+          {/* Root drop zone - visible during drag */}
+          <RootDropZone isActive={activeId !== null} />
           {tree.length === 0 && !isCreating ? (
             <div className="px-2 py-8 text-center">
               <p className="text-xs text-gray-400">No pages yet</p>
             </div>
           ) : (
             <SortableContext items={allIds} strategy={verticalListSortingStrategy}>
-              {tree.map((node) => {
-                if (editingId === node.id) {
-                  return (
-                    <div key={node.id} className="py-0.5">
-                      {renderEditInput()}
-                    </div>
-                  );
-                }
-                return (
-                  <SortableTreeItem
-                    key={node.id}
-                    node={node}
-                    isActive={currentPageId === node.id}
-                    expandedIds={expandedIds}
-                    onToggleExpand={toggleExpand}
-                    onNavigate={(id) => router.push(`/notes/${id}`)}
-                    onStartRename={handleStartRename}
-                    onDelete={handleDelete}
-                    onCreateSubpage={(parentId) => handleCreatePage(parentId)}
-                    menuOpenId={menuOpenId}
-                    setMenuOpenId={setMenuOpenId}
-                    invalidTargets={invalidTargets}
-                    dropTarget={dropTarget}
-                    createParentId={createParentId}
-                    isCreating={isCreating}
-                    renderEditInput={renderEditInput}
-                  />
-                );
-              })}
+              {tree.map((node) => (
+                <SortableTreeItem
+                  key={node.id}
+                  node={node}
+                  isActive={currentPageId === node.id}
+                  expandedIds={expandedIds}
+                  onToggleExpand={toggleExpand}
+                  onNavigate={(id) => router.push(`/notes/${id}`)}
+                  onStartRename={handleStartRename}
+                  onDelete={handleDelete}
+                  onCreateSubpage={(parentId) => handleCreatePage(parentId)}
+                  menuOpenId={menuOpenId}
+                  setMenuOpenId={setMenuOpenId}
+                  invalidTargets={invalidTargets}
+                  dropTarget={dropTarget}
+                  createParentId={createParentId}
+                  isCreating={isCreating}
+                  renderEditInput={renderEditInput}
+                  editingId={editingId}
+                />
+              ))}
             </SortableContext>
           )}
 
