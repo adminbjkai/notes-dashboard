@@ -1,0 +1,6 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Editor styles for syntax highlighting */
+@import "../components/editor/editor-styles.css";
