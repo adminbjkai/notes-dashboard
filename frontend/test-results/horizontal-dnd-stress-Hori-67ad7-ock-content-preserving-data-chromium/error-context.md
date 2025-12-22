@@ -1,0 +1,62 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e4]:
+      - generic [ref=e5]:
+        - heading "Pages" [level=2] [ref=e6]
+        - button "system" [ref=e7] [cursor=pointer]:
+          - img [ref=e8]
+          - generic [ref=e10]: system
+      - generic [ref=e11]:
+        - navigation [ref=e12]:
+          - generic [ref=e14]:
+            - button [ref=e15]:
+              - img [ref=e16]
+            - button [ref=e23] [cursor=pointer]:
+              - img [ref=e24]
+            - button "1st pg" [ref=e26] [cursor=pointer]:
+              - img [ref=e27]
+              - generic [ref=e30]: 1st pg
+            - button [ref=e32] [cursor=pointer]:
+              - img [ref=e33]
+          - generic [ref=e37]:
+            - generic [ref=e38]:
+              - button [ref=e39]:
+                - img [ref=e40]
+              - button [ref=e47] [cursor=pointer]:
+                - img [ref=e48]
+              - button "Code Parent 1766403399112" [ref=e50] [cursor=pointer]:
+                - img [ref=e51]
+                - generic [ref=e54]: Code Parent 1766403399112
+              - button [ref=e56] [cursor=pointer]:
+                - img [ref=e57]
+            - generic [ref=e63]:
+              - button [active] [ref=e64]:
+                - img [ref=e65]
+              - button "Code Note 1766403399122" [ref=e72] [cursor=pointer]:
+                - img [ref=e73]
+                - generic [ref=e76]: Code Note 1766403399122
+              - button [ref=e78] [cursor=pointer]:
+                - img [ref=e79]
+        - status [ref=e83]: Draggable item bb811e8c-b178-4ff5-ac8c-a894740f320f was dropped over droppable area a186f804-ff6b-482f-bc45-2bbad20c7889
+        - button "New Page" [ref=e85] [cursor=pointer]:
+          - img [ref=e86]
+          - text: New Page
+      - button "Reset Data" [ref=e88] [cursor=pointer]
+    - main [ref=e89]:
+      - generic [ref=e90]:
+        - textbox "Untitled" [ref=e91]: Code Note 1766403399122
+        - generic [ref=e95]:
+          - heading "Code Example" [level=1] [ref=e96]
+          - code [ref=e98]: "interface Note { id: string; title: string; parent_id: string | null; }"
+  - status [ref=e99]:
+    - generic [ref=e100]:
+      - img [ref=e102]
+      - generic [ref=e104]:
+        - text: Static route
+        - button "Hide static indicator" [ref=e105] [cursor=pointer]:
+          - img [ref=e106]
+  - alert [ref=e109]
+```

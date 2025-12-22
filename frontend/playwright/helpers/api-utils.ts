@@ -1,11 +1,11 @@
 import type { APIRequestContext } from "@playwright/test";
-import type { Note } from "../../types/note";
+import type { Note, NoteCreate } from "../../types/note";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 export async function createTestNote(
   request: APIRequestContext,
-  data: { title: string; parent_id?: string | null }
+  data: NoteCreate
 ): Promise<Note> {
   const res = await request.post(`${API_BASE_URL}/api/notes`, { data });
   if (!res.ok()) {

@@ -134,4 +134,79 @@ The hierarchy is persisted via these API endpoints:
 | `PUT /api/notes/:id/reorder` | Atomic reorder operation |
 | `DELETE /api/notes/:id` | Delete note and all descendants |
 
-The backend (`note_service.py`) handles position normalization to maintain consistent ordering.
+## Backend Position Normalization
+
+The backend (`note_service.py`) uses `_normalize_positions()` to maintain consistent 0-indexed sequential ordering:
+
+```python
+def _normalize_positions(self, parent_id: str | None) -> None:
+    notes = (
+        self.db.query(Note)
+        .filter(Note.parent_id == parent_id)
+        .order_by(Note.position, Note.created_at, Note.id)  # Triple sort for determinism
+        .all()
+    )
+    for index, note in enumerate(notes):
+        if note.position != index:
+            note.position = index
+    self.db.flush()
+```
+
+**Key Features:**
+- Uses 0-indexed positions `[0, 1, 2, ...]`
+- Triple sort key (position, created_at, id) ensures deterministic ordering
+- Conditional updates only write when position changes
+
+This method is called after every operation that modifies hierarchy:
+- **create()**: Auto-assigns position at end, then normalizes
+- **update()**: Normalizes old and new parent groups if parent changed
+- **reorder()**: Normalizes both old and new parent groups
+- **delete()**: Normalizes parent group to close gaps
+
+### Position Assignment Algorithm
+
+```python
+def _get_next_position(self, parent_id: str | None) -> int:
+    """Get the next available position for a given parent (0-indexed)."""
+    count = self.db.query(func.count(Note.id)).filter(
+        Note.parent_id == parent_id
+    ).scalar()
+    return count or 0
+```
+
+This ensures newly created notes get proper 0-indexed positions.
+
+### Cascade Deletion
+
+The SQLAlchemy model uses `cascade="all, delete-orphan"` with `ondelete="CASCADE"`:
+
+```python
+children: Mapped[list["Note"]] = relationship(
+    "Note",
+    back_populates="parent",
+    cascade="all, delete-orphan",
+    order_by="Note.position",
+)
+```
+
+When a parent is deleted, all descendants are automatically removed.
+
+### Circular Reference Prevention
+
+The `_is_descendant()` method uses a PostgreSQL recursive CTE with depth limit:
+
+```sql
+WITH RECURSIVE descendants AS (
+    SELECT id, 1 AS depth FROM notes WHERE parent_id = :ancestor_id
+    UNION ALL
+    SELECT n.id, d.depth + 1 FROM notes n
+    JOIN descendants d ON n.parent_id = d.id
+    WHERE d.depth < 100
+)
+SELECT 1 FROM descendants WHERE id = :descendant_id LIMIT 1
+```
+
+This prevents:
+1. A note being its own parent
+2. A note being moved under any of its descendants
+3. Infinite loops in malformed data (depth limit of 100)

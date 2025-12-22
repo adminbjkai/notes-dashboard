@@ -105,6 +105,11 @@ function SortableTreeItem({
   const indicatorPosition = dropTarget?.id === node.id ? dropTarget.position : null;
   const isNestTarget = indicatorPosition === "on" && !isInvalidTarget;
 
+  // Visual feedback for outdent mode: highlight parent if child is drop target with "after"
+  const isOutdentParentTarget = node.children.some(
+    (child) => dropTarget?.id === child.id && dropTarget?.position === "after" && child.parent_id === node.id
+  );
+
   return (
     <div ref={setNodeRef} style={style}>
       <div
@@ -113,7 +118,8 @@ function SortableTreeItem({
           "hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors",
           isActive && "bg-gray-100 dark:bg-gray-800 font-medium",
           isDragging && "opacity-50",
-          isNestTarget && "bg-blue-50/70 dark:bg-blue-900/20",
+          isNestTarget && "bg-blue-100/80 dark:bg-blue-900/30 ring-2 ring-blue-400/50 dark:ring-blue-600/50",
+          isOutdentParentTarget && "bg-indigo-50/60 dark:bg-indigo-900/20 ring-1 ring-indigo-300/40",
           isOver &&
             isInvalidTarget &&
             "border border-red-400 bg-red-50/70 dark:bg-red-900/30 cursor-not-allowed"
@@ -190,12 +196,14 @@ function SortableTreeItem({
               setMenuOpenId(menuOpenId === node.id ? null : node.id);
             }}
             className="rounded p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700"
+            data-menu-toggle
           >
             <MoreHorizontal className="h-4 w-4 text-gray-500 dark:text-gray-400" />
           </button>
 
           {menuOpenId === node.id && (
             <div
+              data-menu
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -367,8 +375,9 @@ export function PageTree({ pages }: PageTreeProps) {
   ): DropPosition => {
     if (!overRect) return "on";
     const y = pointerY ?? overRect.top + overRect.height / 2;
-    const upperBand = overRect.top + overRect.height * 0.25;
-    const lowerBand = overRect.bottom - overRect.height * 0.25;
+    // Confluence/Docmost Standard: 35/30/35 zones
+    const upperBand = overRect.top + overRect.height * 0.35;
+    const lowerBand = overRect.bottom - overRect.height * 0.35;
     if (y <= upperBand) return "before";
     if (y >= lowerBand) return "after";
     return "on";
@@ -605,6 +614,30 @@ export function PageTree({ pages }: PageTreeProps) {
     }
 
     const overNode = nodeMap.get(String(overId));
+
+    // Horizontal offset detection for indent/outdent
+    const INDENT_THRESHOLD = 40;
+    let position = getDropPosition(event.over?.rect ?? null, pointer?.y ?? null);
+    let targetId = String(overId);
+
+    if (pointer && dragStartPointerRef.current) {
+      const horizontalOffset = pointer.x - dragStartPointerRef.current.x;
+
+      // Indent: Moving RIGHT > 40px forces "on" position (nest into target)
+      if (horizontalOffset > INDENT_THRESHOLD) {
+        position = "on";
+      }
+      // Outdent: Moving LEFT > 40px moves to grandparent level
+      else if (horizontalOffset < -INDENT_THRESHOLD && overNode?.parent_id) {
+        const parentNode = nodeMap.get(overNode.parent_id);
+        if (parentNode) {
+          targetId = overNode.parent_id;
+          position = "after";
+        }
+      }
+    }
+
+    // Auto-expand collapsed nodes on hover
     if (overNode && overNode.children.length > 0 && !expandedIds.has(overNode.id)) {
       if (hoverExpandRef.current.id !== overNode.id) {
         if (hoverExpandRef.current.timeout) {
@@ -621,8 +654,8 @@ export function PageTree({ pages }: PageTreeProps) {
       }
       hoverExpandRef.current = { id: null, timeout: null };
     }
-    const position = getDropPosition(event.over?.rect ?? null, pointer?.y ?? null);
-    setDropTarget({ id: String(overId), position });
+
+    setDropTarget({ id: targetId, position });
     document.body.style.cursor = "";
   }
 

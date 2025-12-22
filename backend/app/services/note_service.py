@@ -29,17 +29,17 @@ class NoteService:
         return self.db.query(Note.id).filter(Note.id == parent_id).first() is not None
 
     def _get_next_position(self, parent_id: str | None) -> int:
-        """Get the next available position for a given parent."""
-        max_pos = self.db.query(func.max(Note.position)).filter(
+        """Get the next available position for a given parent (0-indexed)."""
+        count = self.db.query(func.count(Note.id)).filter(
             Note.parent_id == parent_id
         ).scalar()
-        return (max_pos or 0) + 1
+        return count or 0
 
     def _normalize_positions(self, parent_id: str | None) -> None:
         notes = (
             self.db.query(Note)
             .filter(Note.parent_id == parent_id)
-            .order_by(Note.position, Note.created_at)
+            .order_by(Note.position, Note.created_at, Note.id)
             .all()
         )
         for index, note in enumerate(notes):
@@ -66,6 +66,11 @@ class NoteService:
             position=position,
         )
         self.db.add(note)
+        self.db.flush()
+
+        # Normalize to ensure clean 0-indexed positions
+        self._normalize_positions(data.parent_id)
+
         self.db.commit()
         self.db.refresh(note)
         return note
@@ -101,7 +106,12 @@ class NoteService:
         return note
 
     def reorder(self, note_id: str, data: NoteReorder) -> Note | None:
-        """Move a note to a new position, optionally under a new parent."""
+        """Move a note to a new position, optionally under a new parent.
+
+        The requested position is the target index in the sibling array (0-indexed).
+        We update sibling positions minimally to ensure correct sort order, then
+        normalize to clean up gaps and ensure sequential 0-indexed positions.
+        """
         note = self.get_by_id(note_id)
         if not note:
             return None
@@ -121,39 +131,47 @@ class NoteService:
             if self._is_descendant(new_parent_id, note_id):
                 raise ValueError("Cannot move note under its own descendant")
 
-        # If moving within the same parent
+        # Get current siblings in the target parent (excluding the moved note)
+        siblings = (
+            self.db.query(Note)
+            .filter(Note.parent_id == new_parent_id, Note.id != note_id)
+            .order_by(Note.position, Note.created_at)
+            .all()
+        )
+
+        # Early return if moving within same parent and already at correct position
         if old_parent_id == new_parent_id:
-            if old_position < new_position:
-                # Moving down: shift items between old and new positions up
-                self.db.query(Note).filter(
-                    Note.parent_id == old_parent_id,
-                    Note.position > old_position,
-                    Note.position <= new_position
-                ).update({Note.position: Note.position - 1})
-            elif old_position > new_position:
-                # Moving up: shift items between new and old positions down
-                self.db.query(Note).filter(
-                    Note.parent_id == old_parent_id,
-                    Note.position >= new_position,
-                    Note.position < old_position
-                ).update({Note.position: Note.position + 1})
-        else:
-            # Moving to a different parent
-            # Close the gap in old parent
-            self.db.query(Note).filter(
-                Note.parent_id == old_parent_id,
-                Note.position > old_position
-            ).update({Note.position: Note.position - 1})
+            current_index = None
+            for i, sib in enumerate(siblings):
+                if sib.position > old_position:
+                    # Note comes before this sibling
+                    current_index = i
+                    break
+            if current_index is None:
+                current_index = len(siblings)  # Note is at the end
 
-            # Make room in new parent
-            self.db.query(Note).filter(
-                Note.parent_id == new_parent_id,
-                Note.position >= new_position
-            ).update({Note.position: Note.position + 1})
+            if current_index == new_position:
+                # Already in the correct position, no reorder needed
+                return note
 
-        # Update the note itself
+        # Temporarily set position to a large value to avoid conflicts during update
+        note.position = 999999
         note.parent_id = new_parent_id
+        self.db.flush()
+
+        # Insert the note at the desired position
+        # Shift siblings to make room: those at or after new_position move down
+        for i, sibling in enumerate(siblings):
+            if i >= new_position:
+                sibling.position = i + 1
+            else:
+                sibling.position = i
+
+        # Set the moved note's final position
         note.position = new_position
+        self.db.flush()
+
+        # Normalize both parents to ensure clean sequential positions
         self._normalize_positions(old_parent_id)
         if new_parent_id != old_parent_id:
             self._normalize_positions(new_parent_id)
@@ -163,14 +181,18 @@ class NoteService:
         return note
 
     def _is_descendant(self, potential_descendant_id: str, ancestor_id: str) -> bool:
-        """Check if potential_descendant_id is a descendant of ancestor_id."""
+        """Check if potential_descendant_id is a descendant of ancestor_id.
+
+        Uses recursive CTE with depth limit to prevent infinite loops.
+        """
         query = text(
             """
             WITH RECURSIVE descendants AS (
-                SELECT id FROM notes WHERE parent_id = :ancestor_id
+                SELECT id, 1 AS depth FROM notes WHERE parent_id = :ancestor_id
                 UNION ALL
-                SELECT n.id FROM notes n
+                SELECT n.id, d.depth + 1 FROM notes n
                 JOIN descendants d ON n.parent_id = d.id
+                WHERE d.depth < 100
             )
             SELECT 1 FROM descendants WHERE id = :descendant_id LIMIT 1
             """
@@ -190,7 +212,7 @@ class NoteService:
 
         # Delete the note (cascade will handle children)
         self.db.delete(note)
-        self.db.commit()
+        self.db.flush()
 
         # Normalize positions in the parent to close the gap
         self._normalize_positions(parent_id)

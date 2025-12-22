@@ -14,7 +14,7 @@ test.describe("Drag-and-drop integrity", () => {
     const sidebar = page.locator("aside");
     const parentRow = sidebar.getByRole("button", { name: parentTitle }).locator("..");
     const childRow = sidebar.getByRole("button", { name: childTitle }).locator("..");
-    const parentHandle = parentRow.locator("div.cursor-grab");
+    const parentHandle = parentRow.locator("[data-dnd-handle]");
 
     await parentRow.hover();
     const parentBox = await parentHandle.boundingBox();
@@ -25,12 +25,17 @@ test.describe("Drag-and-drop integrity", () => {
 
     await page.mouse.move(parentBox.x + parentBox.width / 2, parentBox.y + parentBox.height / 2);
     await page.mouse.down();
+    // Move slowly with more steps to ensure dnd-kit detects the drag
     await page.mouse.move(childBox.x + childBox.width / 2, childBox.y + childBox.height / 2, {
-      steps: 8,
+      steps: 20,
     });
 
-    await page.waitForTimeout(100);
-    await expect(childRow).toHaveClass(/border-red-400/);
+    // Wait for dnd-kit to process the drag and update styles
+    await page.waitForTimeout(300);
+
+    // The row with the red border is the inner div.group container
+    const childRowInner = sidebar.getByRole("button", { name: childTitle }).locator("xpath=ancestor::div[contains(@class, 'group')][1]");
+    await expect(childRowInner).toHaveClass(/border-red-400/, { timeout: 5000 });
 
     await page.mouse.up();
 

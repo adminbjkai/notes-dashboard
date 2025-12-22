@@ -1,0 +1,82 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e4]:
+      - generic [ref=e5]:
+        - heading "Pages" [level=2] [ref=e6]
+        - button "system" [ref=e7] [cursor=pointer]:
+          - img [ref=e8]
+          - generic [ref=e10]: system
+      - generic [ref=e11]:
+        - navigation [ref=e12]:
+          - generic [ref=e14]:
+            - button [ref=e15]:
+              - img [ref=e16]
+            - button [ref=e23] [cursor=pointer]:
+              - img [ref=e24]
+            - button "1st pg" [ref=e26] [cursor=pointer]:
+              - img [ref=e27]
+              - generic [ref=e30]: 1st pg
+            - button [ref=e32] [cursor=pointer]:
+              - img [ref=e33]
+          - generic [ref=e37]:
+            - generic [ref=e38]:
+              - button [ref=e39]:
+                - img [ref=e40]
+              - button [ref=e47] [cursor=pointer]:
+                - img [ref=e48]
+              - button "Outdent Level 0 1766403377062" [ref=e50] [cursor=pointer]:
+                - img [ref=e51]
+                - generic [ref=e54]: Outdent Level 0 1766403377062
+              - button [ref=e56] [cursor=pointer]:
+                - img [ref=e57]
+            - generic [ref=e62]:
+              - generic [ref=e63]:
+                - button [ref=e64]:
+                  - img [ref=e65]
+                - button [ref=e72] [cursor=pointer]:
+                  - img [ref=e73]
+                - button "Outdent Level 1 1766403377067" [ref=e75] [cursor=pointer]:
+                  - img [ref=e76]
+                  - generic [ref=e79]: Outdent Level 1 1766403377067
+                - button [ref=e81] [cursor=pointer]:
+                  - img [ref=e82]
+              - generic [ref=e87]:
+                - generic [ref=e88]:
+                  - button [ref=e89]:
+                    - img [ref=e90]
+                  - button [ref=e97] [cursor=pointer]:
+                    - img [ref=e98]
+                  - button "Outdent Level 2 1766403377071" [ref=e100] [cursor=pointer]:
+                    - img [ref=e101]
+                    - generic [ref=e104]: Outdent Level 2 1766403377071
+                  - button [ref=e106] [cursor=pointer]:
+                    - img [ref=e107]
+                - generic [ref=e113]:
+                  - button [active] [ref=e114]:
+                    - img [ref=e115]
+                  - button "Outdent Level 3 1766403377075" [ref=e122] [cursor=pointer]:
+                    - img [ref=e123]
+                    - generic [ref=e126]: Outdent Level 3 1766403377075
+                  - button [ref=e128] [cursor=pointer]:
+                    - img [ref=e129]
+        - status [ref=e133]: Draggable item b147d63a-6026-4211-ab0b-b452a6dc9eec was dropped over droppable area b147d63a-6026-4211-ab0b-b452a6dc9eec
+        - button "New Page" [ref=e135] [cursor=pointer]:
+          - img [ref=e136]
+          - text: New Page
+      - button "Reset Data" [ref=e138] [cursor=pointer]
+    - main [ref=e139]:
+      - generic [ref=e140]:
+        - textbox "Untitled" [ref=e141]: Outdent Level 3 1766403377075
+        - paragraph [ref=e146]: Start writing, or press / for commands...
+  - status [ref=e147]:
+    - generic [ref=e148]:
+      - img [ref=e150]
+      - generic [ref=e152]:
+        - text: Static route
+        - button "Hide static indicator" [ref=e153] [cursor=pointer]:
+          - img [ref=e154]
+  - alert [ref=e157]
+```

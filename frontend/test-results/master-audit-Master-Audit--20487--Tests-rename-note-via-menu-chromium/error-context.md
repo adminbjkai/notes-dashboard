@@ -1,0 +1,42 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e4]:
+      - generic [ref=e5]:
+        - heading "Pages" [level=2] [ref=e6]
+        - button "system" [ref=e7] [cursor=pointer]:
+          - img [ref=e8]
+          - generic [ref=e10]: system
+      - generic [ref=e11]:
+        - navigation [ref=e12]:
+          - generic [ref=e14]:
+            - button [ref=e15]:
+              - img [ref=e16]
+            - button [ref=e23] [cursor=pointer]:
+              - img [ref=e24]
+            - button "1st pg" [ref=e26] [cursor=pointer]:
+              - img [ref=e27]
+              - generic [ref=e30]: 1st pg
+            - button [ref=e32] [cursor=pointer]:
+              - img [ref=e33]
+          - textbox "Page title..." [active] [ref=e38]: Original 1766403407612
+        - status [ref=e39]
+        - button "New Page" [ref=e41] [cursor=pointer]:
+          - img [ref=e42]
+          - text: New Page
+      - button "Reset Data" [ref=e44] [cursor=pointer]
+    - main [ref=e45]:
+      - generic [ref=e46]:
+        - textbox "Untitled" [ref=e47]: Original 1766403407612
+        - paragraph [ref=e52]: Start writing, or press / for commands...
+  - status [ref=e53]:
+    - generic [ref=e54]:
+      - img [ref=e56]
+      - generic [ref=e58]:
+        - text: Static route
+        - button "Hide static indicator" [ref=e59] [cursor=pointer]:
+          - img [ref=e60]
+  - alert [ref=e63]
+```

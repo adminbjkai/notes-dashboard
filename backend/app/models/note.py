@@ -18,7 +18,7 @@ class Note(Base):
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     content: Mapped[str | None] = mapped_column(Text, nullable=True)
     sidenote: Mapped[str | None] = mapped_column(Text, nullable=True)
-    parent_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("notes.id", ondelete="SET NULL"), nullable=True)
+    parent_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("notes.id", ondelete="CASCADE"), nullable=True)
     position: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, onupdate=utc_now)
