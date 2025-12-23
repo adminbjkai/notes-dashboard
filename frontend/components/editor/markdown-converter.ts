@@ -10,11 +10,18 @@ function slugify(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
-const headingRenderer = new Renderer();
-headingRenderer.heading = function ({ text, depth }) {
-  const id = slugify(text);
-  return `<h${depth} id="${id}">${text}</h${depth}>\n`;
-};
+function createHeadingRenderer(): Renderer {
+  const slugCounts = new Map<string, number>();
+  const renderer = new Renderer();
+  renderer.heading = function ({ text, depth }) {
+    const baseSlug = slugify(text);
+    const count = slugCounts.get(baseSlug) || 0;
+    slugCounts.set(baseSlug, count + 1);
+    const id = count === 0 ? baseSlug : `${baseSlug}-${count + 1}`;
+    return `<h${depth} id="${id}">${text}</h${depth}>\n`;
+  };
+  return renderer;
+}
 
 // Configure marked for GFM (GitHub Flavored Markdown)
 marked.setOptions({
@@ -176,8 +183,8 @@ export function markdownToHtml(markdown: string): string {
     (match) => `<ul data-type="taskList">${match}</ul>\n\n`
   );
 
-  // Use marked for the rest
-  const html = marked.parse(processed, { renderer: headingRenderer }) as string;
+  // Use marked for the rest (create fresh renderer per call for unique heading IDs)
+  const html = marked.parse(processed, { renderer: createHeadingRenderer() }) as string;
 
   return html;
 }

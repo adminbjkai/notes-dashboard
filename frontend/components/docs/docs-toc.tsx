@@ -42,8 +42,8 @@ export function DocsToc({ headings }: DocsTocProps) {
         On this page
       </h3>
       <ul className="space-y-1 text-sm">
-        {filtered.map((heading) => (
-          <li key={heading.id} style={{ paddingLeft: (heading.level - 1) * 12 }}>
+        {filtered.map((heading, index) => (
+          <li key={`${heading.id}-${index}`} style={{ paddingLeft: (heading.level - 1) * 12 }}>
             <a
               href={`#${heading.id}`}
               className={cn(
