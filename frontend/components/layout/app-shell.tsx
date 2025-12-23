@@ -21,7 +21,7 @@ export async function AppShell({ children }: AppShellProps) {
       </div>
 
       {/* Main content area */}
-      <main className="flex-1 overflow-y-auto bg-white dark:bg-gray-900 transition-colors">
+      <main className="flex-1 overflow-y-auto bg-white dark:bg-dark-surface transition-colors">
         {children}
       </main>
     </div>

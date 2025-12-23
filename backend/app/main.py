@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
-from app.routers import notes, uploads
+from app.routers import docs, notes, uploads
 
 # Ensure uploads directory exists
 UPLOAD_DIR = Path("/app/uploads")
@@ -26,6 +26,7 @@ app.add_middleware(
 
 app.include_router(notes.router, prefix="/api/notes", tags=["notes"])
 app.include_router(uploads.router, prefix="/api/uploads", tags=["uploads"])
+app.include_router(docs.router, prefix="/api/docs", tags=["docs"])
 
 # Serve uploaded files
 app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")

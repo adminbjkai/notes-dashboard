@@ -31,4 +31,25 @@
 2. Improve DnD nesting/reordering with drop indicators. (done)
 3. Add sidebar delete action test. (done)
 4. Apply Docmost-style drag thresholds and auto-expand. (done)
-5. Implement strict zone DnD + backend normalization + precision test. (in progress)
+5. Implement strict zone DnD + backend normalization + precision test. (done)
+
+## AI Documentation Portal (GitBook-style)
+
+**Goal:** Serve `/docs` route with live status badges, searchable docs, and optional AI summaries.
+
+### Phase 1: Backend (completed)
+1. Create `backend/app/schemas/docs.py` - Pydantic models. (done)
+2. Create `backend/app/services/docs_service.py` - Parse markdown, extract badges. (done)
+3. Create `backend/app/services/ai_summary_service.py` - Rule-based + Claude fallback. (done)
+4. Create `backend/app/routers/docs.py` - API endpoints. (done)
+5. Update `backend/app/main.py` - Register docs router. (done)
+6. Update `docker-compose.yml` - Add `.:/repo:ro` volume mount. (done)
+
+### Phase 2: Frontend (completed)
+1. Create `frontend/types/docs.ts` - TypeScript types. (done)
+2. Create `frontend/lib/docs-api.ts` - API client. (done)
+3. Create `frontend/app/docs/layout.tsx` - Docs layout with sidebar. (done)
+4. Create `frontend/app/docs/page.tsx` - Landing page. (done)
+5. Create `frontend/app/docs/[slug]/page.tsx` - Individual doc page. (done)
+6. Create `frontend/components/docs/` - Sidebar, breadcrumbs, badges, content, pulse, search. (done)
+7. Create `frontend/hooks/use-doc-status.ts` - Polling hook. (done)

@@ -3,8 +3,18 @@
  * - marked: Markdown → HTML (handles GFM tables, task lists, etc.)
  * - turndown: HTML → Markdown (handles any HTML structure)
  */
-import { marked } from "marked";
+import { marked, Renderer } from "marked";
 import TurndownService from "turndown";
+
+function slugify(text: string): string {
+  return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+const headingRenderer = new Renderer();
+headingRenderer.heading = function ({ text, depth }) {
+  const id = slugify(text);
+  return `<h${depth} id="${id}">${text}</h${depth}>\n`;
+};
 
 // Configure marked for GFM (GitHub Flavored Markdown)
 marked.setOptions({
@@ -167,7 +177,7 @@ export function markdownToHtml(markdown: string): string {
   );
 
   // Use marked for the rest
-  const html = marked.parse(processed) as string;
+  const html = marked.parse(processed, { renderer: headingRenderer }) as string;
 
   return html;
 }

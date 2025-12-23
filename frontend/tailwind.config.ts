@@ -8,7 +8,17 @@ const config: Config = {
   ],
   darkMode: "class",
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        dark: {
+          bg: "#0a0a0b",
+          surface: "#111113",
+          elevated: "#18181b",
+          border: "#27272a",
+          muted: "#3f3f46",
+        },
+      },
+    },
   },
   plugins: [typography],
 };

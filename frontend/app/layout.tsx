@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { AppShell } from "@/components/layout/app-shell";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
@@ -18,10 +17,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="min-h-screen bg-gray-50 dark:bg-gray-950 antialiased transition-colors">
-        <ThemeProvider>
-          <AppShell>{children}</AppShell>
-        </ThemeProvider>
+      <body className="min-h-screen bg-gray-50 dark:bg-dark-bg antialiased transition-colors">
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

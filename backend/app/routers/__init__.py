@@ -1,3 +1,3 @@
-from app.routers import notes
+from app.routers import docs, notes, uploads
 
-__all__ = ["notes"]
+__all__ = ["docs", "notes", "uploads"]

@@ -27,6 +27,7 @@ services:
     volumes:
       - ./backend:/app
       - backend_uploads:/app/uploads
+      - .:/repo:ro  # Read-only access to repo root for docs portal
     depends_on:
       db:
         condition: service_healthy

@@ -303,7 +303,7 @@ const CommandList = forwardRef<CommandListRef, CommandListProps>(
       >
         {items.map((item, index) => (
           <button
-            key={item.title}
+            key={`${item.title}-${item.description}`}
             data-index={index}
             onClick={() => command(item)}
             className={cn(
