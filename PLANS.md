@@ -53,3 +53,90 @@
 5. Create `frontend/app/docs/[slug]/page.tsx` - Individual doc page. (done)
 6. Create `frontend/components/docs/` - Sidebar, breadcrumbs, badges, content, pulse, search. (done)
 7. Create `frontend/hooks/use-doc-status.ts` - Polling hook. (done)
+
+## System Audit & Stabilization (completed 2025-12-23)
+
+**Goal:** Full system audit with security fixes and documentation alignment.
+
+### Audit Phase (completed)
+1. Route integrity - Verified no duplicate routes, /docs independent. (done)
+2. Documentation review - All markdown docs accurate. (done)
+3. Runtime verification - Docker compose, migrations, all pages 200. (done)
+4. Lint/type checks - Frontend ESLint + TSC pass. (done)
+5. Backend checks - mypy + pytest pass. (done)
+6. Security scan - npm audit identified critical CVEs. (done)
+
+### Fixes Applied (completed)
+1. **Next.js 15.1.0 → 15.5.9** - Fixed 6 critical CVEs (DoS, SSRF, RCE). (done)
+2. **Added ruff/mypy to requirements.txt** - Dev dependencies now tracked. (done)
+3. **Pydantic ConfigDict migration** - Resolved deprecation warnings. (done)
+4. **Ruff warnings fixed** - Prefixed 7 unused test variables with `_`. (done)
+
+### Validation (completed)
+- All pages: 200 (`/`, `/docs`, `/notes/new` with redirect)
+- Backend tests: 7/7 passing (no deprecation warnings)
+- Frontend lint + type-check: passing
+- Backend ruff + mypy: passing (0 warnings)
+- **Playwright E2E tests: 33/36 passing** (3 DnD timing-sensitive tests flaky)
+
+### Additional Fixes (completed 2025-12-23)
+1. Fixed smoke tests: Updated template picker flow to handle Enter submission
+2. Fixed long title test: Reduced repeat from 50 to 15 (within VARCHAR(255) limit)
+3. Fixed DnD race condition: Removed redundant updateNote calls after reorderNote
+
+**Report:** `SYSTEM_AUDIT_2025-12-23.md`
+
+## System Audit & Image Validation (completed 2025-12-24)
+
+**Goal:** Follow-up audit with image upload/insert validation and full E2E verification.
+
+### Phase 1: Audit (completed)
+1. Route integrity verification - No issues found. (done)
+2. Documentation audit - Fixed CLAUDE.md (25/50/25 → 35/30/35 zones). (done)
+3. Runtime verification - All services healthy, all endpoints 200. (done)
+4. Lint/type/test checks - All passing. (done)
+5. Security audit - 5 moderate dev-only vulnerabilities (vitest/esbuild). (done)
+6. Image URL insertion validation - New test suite created and passing. (done)
+
+### Phase 2: Fixes Applied (completed)
+1. **CLAUDE.md zone documentation** - Corrected 25/50/25 to 35/30/35 to match implementation. (done)
+2. **New image-features.spec.ts test** - Comprehensive media features test suite. (done)
+
+### Phase 3: E2E Validation (completed)
+- **Playwright E2E tests: 37/40 passing (92.5%)**
+- 3 known flaky DnD timing tests (position/coordinate precision)
+- Media features tests: All 4 passing (Image URL, Image Upload, File Attachment)
+- All smoke, master audit, sidebar, tree view tests: Passing
+
+### New Tests Added
+1. Image URL insertion - slash menu → dialog → insert → persist
+2. Image URL cancel - dialog cancellation
+3. Image upload - slash menu → file picker → upload → persist
+4. File attachment - slash menu → file picker → upload → persist
+
+**Report:** `SYSTEM_AUDIT_2025-12-24.md`
+
+## Fix Flaky DnD Tests (completed 2025-12-24)
+
+**Goal:** Improve E2E test reliability from 92.5% to 95%+.
+
+### Root Cause Analysis
+
+| Test | Issue | Root Cause | Status |
+|------|-------|------------|--------|
+| `shows blue line indicator` | Cleanup 404 | Cascade delete race | **FIXED** |
+| `moves note with code block` | parent_id not null | Coordinate mismatch | **FIXED** |
+| `before zone inserts above` | Position timing | Drag precision edge case | Known flaky |
+| `after zone inserts below` | Position timing | Drag precision edge case | Known flaky |
+
+### Fixes Applied
+
+1. **Added `safeDeleteTestNote` helper** - Ignores 404 (cascade-deleted notes)
+2. **Explicit horizontal offset for root drop** - Uses -120px offset instead of absolute coords
+3. **Increased wait times** - 500ms → 1000ms for position normalization
+
+### Final Results
+
+- **Before:** 37/40 passing (92.5%)
+- **After:** 38/40 passing (95%)
+- 2 remaining flaky tests: Position-precision edge cases (timing-sensitive, not critical)

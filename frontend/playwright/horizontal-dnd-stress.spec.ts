@@ -1,5 +1,5 @@
 import { test, expect, Page } from "@playwright/test";
-import { createTestNote, deleteTestNote, getTestNote } from "./helpers/api-utils";
+import { createTestNote, deleteTestNote, getTestNote, safeDeleteTestNote } from "./helpers/api-utils";
 
 /**
  * HORIZONTAL DND STRESS TEST SUITE
@@ -217,7 +217,8 @@ test.describe("Horizontal DnD: 4-Level Tree Operations", () => {
       await page.waitForTimeout(300);
       await page.mouse.up();
 
-      await page.waitForTimeout(500);
+      // Wait for API and position normalization to complete
+      await page.waitForTimeout(1000);
 
       // Verify note2 is now before note1
       const updatedNote1 = await getTestNote(request, note1.id);
@@ -225,8 +226,8 @@ test.describe("Horizontal DnD: 4-Level Tree Operations", () => {
 
       expect(updatedNote2.position).toBeLessThan(updatedNote1.position);
     } finally {
-      await deleteTestNote(request, note2.id);
-      await deleteTestNote(request, note1.id);
+      await safeDeleteTestNote(request, note2.id);
+      await safeDeleteTestNote(request, note1.id);
     }
   });
 
@@ -258,7 +259,8 @@ test.describe("Horizontal DnD: 4-Level Tree Operations", () => {
       await page.waitForTimeout(300);
       await page.mouse.up();
 
-      await page.waitForTimeout(500);
+      // Wait longer for API call and position normalization to complete
+      await page.waitForTimeout(1000);
 
       // Verify order: note1, note3, note2
       const updatedNote1 = await getTestNote(request, note1.id);
@@ -268,9 +270,9 @@ test.describe("Horizontal DnD: 4-Level Tree Operations", () => {
       expect(updatedNote1.position).toBeLessThan(updatedNote3.position);
       expect(updatedNote3.position).toBeLessThan(updatedNote2.position);
     } finally {
-      await deleteTestNote(request, note3.id);
-      await deleteTestNote(request, note2.id);
-      await deleteTestNote(request, note1.id);
+      await safeDeleteTestNote(request, note3.id);
+      await safeDeleteTestNote(request, note2.id);
+      await safeDeleteTestNote(request, note1.id);
     }
   });
 
@@ -347,8 +349,9 @@ test.describe("Horizontal DnD: Visual Feedback", () => {
 
       await page.mouse.up();
     } finally {
-      await deleteTestNote(request, note2.id);
-      await deleteTestNote(request, note1.id);
+      // Use safeDelete - drag may have nested note1 into note2, causing cascade delete
+      await safeDeleteTestNote(request, note2.id);
+      await safeDeleteTestNote(request, note1.id);
     }
   });
 
@@ -554,12 +557,19 @@ interface Note {
       const nestedBox = await nestedHandle.boundingBox();
       if (!nestedBox) throw new Error("Could not get nested bounds");
 
-      await page.mouse.move(nestedBox.x + nestedBox.width / 2, nestedBox.y + nestedBox.height / 2);
+      // Start from center of handle
+      const startX = nestedBox.x + nestedBox.width / 2;
+      const startY = nestedBox.y + nestedBox.height / 2;
+      await page.mouse.move(startX, startY);
       await page.mouse.down();
-      await page.mouse.move(sidebarBox.x + 10, nestedBox.y, { steps: 30 });
+
+      // Move 120px to the left (root drop triggers at -100px offset)
+      await page.mouse.move(startX - 120, startY, { steps: 30 });
       await page.waitForTimeout(300);
       await page.mouse.up();
-      await page.waitForTimeout(500);
+
+      // Wait for API and normalization
+      await page.waitForTimeout(1000);
 
       // Verify at root
       movedNote = await getTestNote(request, codeNote.id);

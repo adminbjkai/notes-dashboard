@@ -768,13 +768,11 @@ export function PageTree({ pages }: PageTreeProps) {
     // Handle drop on root zone - move to root level
     if (dropToRoot || over?.id === ROOT_DROP_ID) {
       try {
+        // Use reorderNote only - it handles both parent_id and position
+        // Calling updateNote as well causes race conditions with normalization
         await reorderNote(active.id as string, {
           parent_id: null,
           position: tree.length, // Add at end of root
-        });
-        await updateNote(active.id as string, {
-          parent_id: null,
-          position: tree.length,
         });
         router.refresh();
       } catch (err) {
@@ -828,11 +826,9 @@ export function PageTree({ pages }: PageTreeProps) {
     }
 
     try {
+      // Use reorderNote only - it handles both parent_id and position
+      // Calling updateNote as well causes race conditions with normalization
       await reorderNote(active.id as string, {
-        parent_id: newParentId,
-        position: newPosition,
-      });
-      await updateNote(active.id as string, {
         parent_id: newParentId,
         position: newPosition,
       });

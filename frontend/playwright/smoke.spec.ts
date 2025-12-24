@@ -20,6 +20,32 @@ async function waitForEditor(page: Page) {
   return editor;
 }
 
+// Helper: create a new page via the sidebar template picker
+async function createNewPageViaSidebar(page: Page, title?: string) {
+  // Click the New Page button in sidebar to open template picker
+  await page.click('aside >> text=New Page');
+  await page.waitForTimeout(300);
+
+  // Select Blank Page from the template dropdown
+  const blankPage = page.locator('text=Blank Page').first();
+  await blankPage.click();
+  await page.waitForTimeout(300);
+
+  // After clicking template, an inline input appears with default title
+  // Type the title if provided, otherwise use default
+  if (title) {
+    await page.keyboard.type(title);
+  }
+
+  // Press Enter to submit and create the note - this triggers handleCreateSubmit
+  // which creates the note via API and navigates to /notes/{id}
+  await page.keyboard.press("Enter");
+
+  // Wait for navigation to the new note
+  await page.waitForURL(/\/notes\/[a-f0-9-]+/, { timeout: 10000 });
+  await page.waitForTimeout(500);
+}
+
 // Helper: insert block via keyboard-only slash command
 async function insertBlockViaSlashMenu(page: Page, searchText: string) {
   await page.keyboard.type(`/${searchText}`);
@@ -38,18 +64,8 @@ test.describe("Notes Dashboard Smoke Tests", () => {
   test("keyboard-only slash menu: numbered list", async ({ page }) => {
     await page.goto("/");
 
-    // Create a new page
-    await page.click("text=New Page");
-    await page.waitForTimeout(500);
-
-    // Fill in title if prompted
-    const titleInput = page.locator('input[placeholder="Page title..."]');
-    if (await titleInput.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await titleInput.fill("Keyboard Test - Numbered List");
-      await titleInput.press("Enter");
-    }
-
-    await page.waitForTimeout(1000);
+    // Create a new page via sidebar template picker
+    await createNewPageViaSidebar(page, "Keyboard Test - Numbered List");
     await page.screenshot({ path: path.join(screenshotDir, "02-new-page.png") });
 
     // Wait for editor
@@ -80,17 +96,8 @@ test.describe("Notes Dashboard Smoke Tests", () => {
   test("keyboard-only slash menu: quote block", async ({ page }) => {
     await page.goto("/");
 
-    // Create new page
-    await page.click("text=New Page");
-    await page.waitForTimeout(500);
-
-    const titleInput = page.locator('input[placeholder="Page title..."]');
-    if (await titleInput.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await titleInput.fill("Keyboard Test - Quote");
-      await titleInput.press("Enter");
-    }
-
-    await page.waitForTimeout(1000);
+    // Create new page via sidebar template picker
+    await createNewPageViaSidebar(page, "Keyboard Test - Quote");
     await waitForEditor(page);
 
     // Insert quote via keyboard
@@ -108,17 +115,8 @@ test.describe("Notes Dashboard Smoke Tests", () => {
   test("keyboard-only slash menu: table", async ({ page }) => {
     await page.goto("/");
 
-    // Create new page
-    await page.click("text=New Page");
-    await page.waitForTimeout(500);
-
-    const titleInput = page.locator('input[placeholder="Page title..."]');
-    if (await titleInput.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await titleInput.fill("Keyboard Test - Table");
-      await titleInput.press("Enter");
-    }
-
-    await page.waitForTimeout(1000);
+    // Create new page via sidebar template picker
+    await createNewPageViaSidebar(page, "Keyboard Test - Table");
     await waitForEditor(page);
 
     // Insert table via keyboard (use "2x2" to match "Table 2x2" without spaces)
@@ -134,17 +132,8 @@ test.describe("Notes Dashboard Smoke Tests", () => {
   test("content persistence after refresh", async ({ page }) => {
     await page.goto("/");
 
-    // Create new page with content
-    await page.click("text=New Page");
-    await page.waitForTimeout(500);
-
-    const titleInput = page.locator('input[placeholder="Page title..."]');
-    if (await titleInput.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await titleInput.fill("Persistence Test");
-      await titleInput.press("Enter");
-    }
-
-    await page.waitForTimeout(1000);
+    // Create new page via sidebar template picker
+    await createNewPageViaSidebar(page, "Persistence Test");
     await waitForEditor(page);
 
     // Add content using keyboard slash commands
@@ -208,17 +197,8 @@ test.describe("Notes Dashboard Smoke Tests", () => {
   test("slash menu arrow navigation works", async ({ page }) => {
     await page.goto("/");
 
-    // Create new page
-    await page.click("text=New Page");
-    await page.waitForTimeout(500);
-
-    const titleInput = page.locator('input[placeholder="Page title..."]');
-    if (await titleInput.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await titleInput.fill("Arrow Navigation Test");
-      await titleInput.press("Enter");
-    }
-
-    await page.waitForTimeout(1000);
+    // Create new page via sidebar template picker
+    await createNewPageViaSidebar(page, "Arrow Navigation Test");
     await waitForEditor(page);
 
     // Open slash menu

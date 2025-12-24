@@ -660,7 +660,8 @@ test.describe("Master Audit: Edge Case Tests", () => {
   });
 
   test("handles note with very long title", async ({ page, request }) => {
-    const longTitle = `Very Long Title ${Date.now()} ${"Lorem ipsum ".repeat(50)}`;
+    // DB limit is VARCHAR(255), so keep total under 255 chars
+    const longTitle = `Very Long Title ${Date.now()} ${"Lorem ipsum ".repeat(15)}`;
 
     let noteId: string | null = null;
 

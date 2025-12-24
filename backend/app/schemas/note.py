@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class NoteBase(BaseModel):
@@ -29,10 +29,9 @@ class NoteReorder(BaseModel):
 
 
 class NoteResponse(NoteBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     position: int
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        from_attributes = True
