@@ -1,8 +1,32 @@
 node_modules/
 .next/
-.claude/
 backend/__pycache__/
 *.pyc
-.DS_Store
 .env
 .vscode/
+
+# macOS
+**/.DS_Store
+
+# Build artifacts
+frontend/tsconfig.tsbuildinfo
+
+# Test artifacts
+frontend/test-results/**
+frontend/playwright-report/
+
+# VS Code extensions
+*.vsix
+
+# Large binaries (keep generated Mermaid, exclude video/duplicates)
+docs-by-notebooklm/*.mp4
+docs-by-notebooklm/*.MP4
+
+# Claude Code local config (keep agents/skills/settings.json versioned)
+.claude/settings.local.json
+
+# NotebookLM artifacts (keep generated Mermaid, ignore duplicate PDFs)
+docs-by-notebooklm/*.pdf
+
+# GitHub wiki checkout
+notes-dashboard.wiki/
