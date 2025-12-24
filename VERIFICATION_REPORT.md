@@ -856,3 +856,158 @@ The Notes Dashboard now has a fully operational Claude Code governance system:
 6. **Visualizations** - Architecture documentation
 
 **Governance Systemizer Phase Complete:** 2025-12-24
+
+---
+
+## Image Resize Persistence Fix: 2025-12-24
+
+### Problem Description
+
+**Bug:** Resized images in the TipTap editor look correct immediately after resize, but after page refresh (reload note), the image displays at the original size instead of the resized dimensions.
+
+**Expected Behavior:** Resized dimensions should persist across reload.
+
+### Root Cause Analysis
+
+**Data Flow Traced:**
+```
+1. SAVE: TipTap editor -> editor.getHTML() -> htmlToMarkdown() -> backend
+2. LOAD: backend -> markdown -> markdownToHtml() -> TipTap editor
+```
+
+**Problem Found:**
+1. When resizing, TipTap's `updateAttributes({ width: '200px' })` stores width in node attrs
+2. `renderHTML` correctly outputs `<img style="width: 200px">`
+3. **BUG #1:** `turndownService` (HTML→Markdown) had no rule to preserve width
+   - Output: `![alt](src)` (width lost)
+4. **BUG #2:** `parseHTML` in ResizableImage extension had no logic to extract width from style attribute
+
+### Fix Applied
+
+#### Fix 1: Serialize Image Width to Markdown
+
+**File:** `frontend/components/editor/markdown-converter.ts`
+
+**Change:** Added turndown rule to preserve image dimensions using `{width=...}` syntax:
+
+```typescript
+turndownService.addRule("resizableImage", {
+  filter: "img",
+  replacement: function (_content: string, node: Node): string {
+    const img = node as HTMLImageElement;
+    const src = img.getAttribute("src") || "";
+    const alt = img.getAttribute("alt") || "";
+
+    // Extract width from style attribute
+    const style = img.getAttribute("style") || "";
+    const widthMatch = style.match(/width:\s*([^;]+)/);
+    const width = widthMatch ? widthMatch[1].trim() : null;
+
+    // Build markdown with optional width attribute
+    let markdown = `![${alt}](${src})`;
+    if (width) {
+      markdown += `{width=${width}}`;
+    }
+    return markdown;
+  },
+});
+```
+
+**Markdown Format:** `![alt](src){width=200px}`
+
+#### Fix 2: Parse Image Width from Markdown
+
+**File:** `frontend/components/editor/markdown-converter.ts`
+
+**Change:** Added pre-processor to convert `{width=...}` syntax to HTML with style:
+
+```typescript
+// Pre-process images with width attributes
+let processed = markdown.replace(
+  /!\[([^\]]*)\]\(([^)]+)\)\{width=([^}]+)\}/g,
+  (_match, alt, src, width) => {
+    return `<img src="${src}" alt="${alt}" style="width: ${width}">`;
+  }
+);
+```
+
+#### Fix 3: Extract Width from Style in TipTap
+
+**File:** `frontend/components/editor/resizable-image.tsx`
+
+**Change:** Added `parseHTML` function to width attribute to extract from style:
+
+```typescript
+width: {
+  default: null,
+  parseHTML: (element) => {
+    // Extract width from style attribute
+    const style = element.getAttribute("style") || "";
+    const widthMatch = style.match(/width:\s*([^;]+)/);
+    if (widthMatch) {
+      return widthMatch[1].trim();
+    }
+    // Also check for width attribute directly
+    return element.getAttribute("width") || null;
+  },
+  renderHTML: (attributes) => {
+    if (!attributes.width) {
+      return {};
+    }
+    return { style: `width: ${attributes.width}` };
+  },
+},
+```
+
+### Playwright Test Created
+
+**File:** `frontend/playwright/image-resize-persistence.spec.ts`
+
+**Tests:**
+| Test | Description | Status |
+|------|-------------|--------|
+| `resized image width persists after page reload` | Resize to 200px, reload, verify | PASS |
+| `Full size preset persists after reload` | Resize to 100%, reload, verify | PASS |
+| `image without explicit width loads correctly` | Plain image (no width), verify auto | PASS |
+| `markdown format correctly stores image width` | Verify `{width=...}` stored | PASS |
+
+**Test Run:**
+```
+$ npx playwright test image-resize-persistence.spec.ts --project=chromium
+  ✓  1 resized image width persists after page reload (7.8s)
+  ✓  2 Full size preset persists after reload (7.5s)
+  ✓  3 image without explicit width loads correctly (2.1s)
+  ✓  4 markdown format correctly stores image width (22ms)
+
+  4 passed (17.9s)
+```
+
+### Verification Steps
+
+1. Create a new note
+2. Insert an image (via URL or upload)
+3. Click on the image to select it
+4. Click "S" button to resize to 200px (or drag resize handles)
+5. Verify image displays at smaller size
+6. Reload the page (Ctrl+R / Cmd+R)
+7. Verify image remains at 200px (not original size)
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| `frontend/components/editor/markdown-converter.ts` | Added turndown rule + markdown pre-processor |
+| `frontend/components/editor/resizable-image.tsx` | Added parseHTML for width attribute |
+| `frontend/playwright/image-resize-persistence.spec.ts` | NEW - 4 tests for resize persistence |
+
+### Quality Gates
+
+```
+$ npm run lint
+✔ No ESLint warnings or errors
+
+$ npm run type-check
+(no errors)
+```
+
+**Image Resize Persistence Fix Complete:** 2025-12-24

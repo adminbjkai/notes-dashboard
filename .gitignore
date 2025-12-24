@@ -30,3 +30,12 @@ docs-by-notebooklm/*.pdf
 
 # GitHub wiki checkout
 notes-dashboard.wiki/
+
+# MCP server vendor folders
+nano-banana-mcp/
+
+# Local MCP configuration
+docker-compose.mcp.yaml
+
+# Local screenshot artifacts
+.nd/

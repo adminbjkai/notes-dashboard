@@ -154,14 +154,44 @@ turndownService.addRule("fileAttachment", {
   },
 });
 
+// Handle images with width/height attributes (preserve dimensions in markdown)
+turndownService.addRule("resizableImage", {
+  filter: "img",
+  replacement: function (_content: string, node: Node): string {
+    const img = node as HTMLImageElement;
+    const src = img.getAttribute("src") || "";
+    const alt = img.getAttribute("alt") || "";
+
+    // Extract width from style attribute (TipTap stores it as style="width: Xpx")
+    const style = img.getAttribute("style") || "";
+    const widthMatch = style.match(/width:\s*([^;]+)/);
+    const width = widthMatch ? widthMatch[1].trim() : null;
+
+    // Build markdown with optional width attribute
+    let markdown = `![${alt}](${src})`;
+    if (width) {
+      markdown += `{width=${width}}`;
+    }
+    return markdown;
+  },
+});
+
 /**
  * Convert Markdown to HTML for TipTap editor.
  */
 export function markdownToHtml(markdown: string): string {
   if (!markdown) return "";
 
-  // Pre-process callouts before marked (since marked doesn't know about them)
+  // Pre-process images with width attributes: ![alt](src){width=200px} -> <img src="..." style="width: 200px">
   let processed = markdown.replace(
+    /!\[([^\]]*)\]\(([^)]+)\)\{width=([^}]+)\}/g,
+    (_match, alt, src, width) => {
+      return `<img src="${src}" alt="${alt}" style="width: ${width}">`;
+    }
+  );
+
+  // Pre-process callouts before marked (since marked doesn't know about them)
+  processed = processed.replace(
     /^> \[!(\w+)\]\n((?:^> .+\n?)+)/gm,
     (_, type, content) => {
       const innerContent = content.replace(/^> /gm, "").trim();

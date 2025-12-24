@@ -1,0 +1,259 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "generated": "2025-12-24",
+    "sources": [
+      "CONSTITUTION.md",
+      "MASTER_PROMPT.md",
+      "HIERARCHY_LOGIC.md",
+      "DND_INTERACTION.md",
+      "BACKEND_HIERARCHY_AUDIT.md",
+      "VERIFICATION_REPORT.md",
+      "SYSTEM_AUDIT_2025-12-24.md"
+    ]
+  },
+  "infographics": [
+    {
+      "id": "architecture-overview",
+      "title": "Notes Dashboard Architecture Overview",
+      "filename": "notes-dashboard-architecture-hero.png",
+      "sections": [
+        {
+          "label": "Stack Overview",
+          "layout": "horizontal-3-col",
+          "description": "Three-service Docker Compose architecture",
+          "content": {
+            "items": [
+              { "name": "Next.js Frontend", "port": 3000, "color": "blue" },
+              { "name": "FastAPI Backend", "port": 8000, "color": "green" },
+              { "name": "PostgreSQL", "port": 5432, "color": "purple" }
+            ]
+          },
+          "sources": ["CONSTITUTION.md:Section 3.3.1", "VERIFICATION_REPORT.md:Phase 1"]
+        },
+        {
+          "label": "Core Invariants",
+          "layout": "horizontal-3-col",
+          "description": "System rules that must never be violated",
+          "content": {
+            "items": [
+              { "name": "35/30/35 Drop Zones", "value": "before/on/after" },
+              { "name": "Position Normalization", "value": "[0,1,2,...N-1]" },
+              { "name": "Depth Limit", "value": "100" }
+            ]
+          },
+          "sources": ["CONSTITUTION.md:Section 2.1.1", "CONSTITUTION.md:Section 1.1.2", "CONSTITUTION.md:Section 1.2.3"]
+        },
+        {
+          "label": "Governance System",
+          "layout": "horizontal-3-col",
+          "description": "Claude Code automation components",
+          "content": {
+            "items": [
+              { "name": "Agents", "list": ["orchestrator", "repo-auditor", "qa-auditor"] },
+              { "name": "Skills", "list": ["governance-guard", "visualization"] },
+              { "name": "Hooks", "list": ["PostToolUse: ruff, mypy, lint"] }
+            ]
+          },
+          "sources": ["MASTER_PROMPT.md:Agent Invocation", "VERIFICATION_REPORT.md:Governance Phase"]
+        },
+        {
+          "label": "Upload Flow",
+          "layout": "horizontal-flow",
+          "description": "Fixed file picker to image display pipeline",
+          "content": {
+            "steps": ["File Picker", "Backend Upload", "Absolute URL Fix", "Image Display"],
+            "fix": "getImageUrl() transforms /uploads/ to http://localhost:8000/uploads/"
+          },
+          "sources": ["VERIFICATION_REPORT.md:Objective 2", "SYSTEM_AUDIT_2025-12-24.md:Section 6"]
+        }
+      ]
+    },
+    {
+      "id": "invariants-and-guards",
+      "title": "System Invariants & Guards",
+      "filename": "invariants-hero.png",
+      "sections": [
+        {
+          "label": "Backend Invariants",
+          "layout": "vertical-list",
+          "description": "Position management rules",
+          "content": {
+            "rules": [
+              {
+                "id": "1.1.1",
+                "name": "Single Source of Truth",
+                "rule": "_normalize_positions() is the ONLY function authorized to assign final positions"
+              },
+              {
+                "id": "1.1.2",
+                "name": "Zero-Indexed Positions",
+                "rule": "Positions MUST be 0-indexed: [0, 1, 2, ..., N-1]"
+              },
+              {
+                "id": "1.1.3",
+                "name": "Deterministic Ordering",
+                "rule": "ORDER BY position, created_at, id"
+              },
+              {
+                "id": "1.1.4",
+                "name": "Normalization on Every Mutation",
+                "rule": "Called after create(), update(), reorder(), delete()"
+              }
+            ]
+          },
+          "sources": ["CONSTITUTION.md:Article I", "HIERARCHY_LOGIC.md:Backend Position Normalization"]
+        },
+        {
+          "label": "Circular Reference Prevention",
+          "layout": "vertical-list",
+          "description": "Hierarchy integrity guards",
+          "content": {
+            "rules": [
+              {
+                "id": "1.2.1",
+                "name": "Self-Parent Prohibition",
+                "rule": "note.parent_id !== note.id"
+              },
+              {
+                "id": "1.2.2",
+                "name": "Descendant Check",
+                "rule": "_is_descendant(new_parent_id, note_id) must be false"
+              },
+              {
+                "id": "1.2.3",
+                "name": "Recursion Depth Limit",
+                "rule": "CTE depth < 100 prevents infinite loops"
+              }
+            ]
+          },
+          "sources": ["CONSTITUTION.md:Section 1.2", "BACKEND_HIERARCHY_AUDIT.md:_is_descendant Method"]
+        },
+        {
+          "label": "Frontend Invariants",
+          "layout": "visual-diagram",
+          "description": "Drag-and-drop zone strategy",
+          "content": {
+            "zones": [
+              { "name": "before", "percentage": 35, "position": "top", "color": "blue" },
+              { "name": "on", "percentage": 30, "position": "middle", "color": "gold" },
+              { "name": "after", "percentage": 35, "position": "bottom", "color": "blue" }
+            ],
+            "thresholds": {
+              "indent": "+40px horizontal",
+              "outdent": "-40px horizontal",
+              "activation": "8px movement"
+            }
+          },
+          "sources": ["CONSTITUTION.md:Section 2.1", "DND_INTERACTION.md:35/30/35 Strategy"]
+        },
+        {
+          "label": "Quality Gates",
+          "layout": "checklist",
+          "description": "Verification commands",
+          "content": {
+            "backend": [
+              "docker compose exec backend ruff check .",
+              "docker compose exec backend mypy app --ignore-missing-imports",
+              "docker compose exec backend pytest"
+            ],
+            "frontend": [
+              "npm run lint",
+              "npm run type-check"
+            ],
+            "guard": "./scripts/forbid_docs_route.sh"
+          },
+          "sources": ["CONSTITUTION.md:Article V", "MASTER_PROMPT.md:Quality Gates"]
+        }
+      ]
+    },
+    {
+      "id": "upload-pipeline",
+      "title": "Upload Pipeline & Image Flow",
+      "filename": "upload-flow-hero.png",
+      "sections": [
+        {
+          "label": "The Problem",
+          "layout": "before-after",
+          "description": "Why file picker uploads failed",
+          "content": {
+            "before": {
+              "flow": ["File Picker", "Backend returns /uploads/file.png", "Browser requests from localhost:3000", "404 Error"],
+              "issue": "Relative URL resolved against wrong origin"
+            }
+          },
+          "sources": ["VERIFICATION_REPORT.md:Objective 2:Problem Description"]
+        },
+        {
+          "label": "The Fix",
+          "layout": "code-highlight",
+          "description": "URL transformation in resizable-image.tsx",
+          "content": {
+            "function": "getImageUrl(src)",
+            "logic": [
+              "if src starts with http:// or https:// or data: → return src",
+              "if src starts with /uploads/ → return BACKEND_URL + src",
+              "else → return src"
+            ],
+            "result": "/uploads/image.png → http://localhost:8000/uploads/image.png"
+          },
+          "sources": ["VERIFICATION_REPORT.md:Fix Applied", "frontend/components/editor/resizable-image.tsx"]
+        },
+        {
+          "label": "Upload Endpoints",
+          "layout": "api-table",
+          "description": "Backend upload handling",
+          "content": {
+            "endpoints": [
+              { "method": "POST", "path": "/api/uploads/images", "accepts": "jpg, png, gif, webp, svg, heic, heif" },
+              { "method": "POST", "path": "/api/uploads/files", "accepts": "Any file type" },
+              { "method": "GET", "path": "/uploads/{filename}", "returns": "Static file" }
+            ],
+            "limits": {
+              "maxSize": "10MB",
+              "storage": "./uploads/ directory"
+            }
+          },
+          "sources": ["backend/app/routers/uploads.py", "CONSTITUTION.md:Appendix A"]
+        },
+        {
+          "label": "Validation Results",
+          "layout": "test-results",
+          "description": "Playwright E2E verification",
+          "content": {
+            "tests": [
+              { "name": "Image URL insertion", "status": "pass" },
+              { "name": "Image URL cancel", "status": "pass" },
+              { "name": "Image upload", "status": "pass" },
+              { "name": "File attachment", "status": "pass" }
+            ],
+            "total": "4/4 passing"
+          },
+          "sources": ["SYSTEM_AUDIT_2025-12-24.md:Section 6", "frontend/playwright/image-features.spec.ts"]
+        }
+      ]
+    }
+  ],
+  "mermaid_diagrams": [
+    {
+      "id": "architecture_overview",
+      "filename": "architecture_overview.mmd",
+      "type": "flowchart",
+      "direction": "TB",
+      "sources": ["CONSTITUTION.md:Article III", "VERIFICATION_REPORT.md:System Architecture"]
+    },
+    {
+      "id": "invariants_and_guards",
+      "filename": "invariants_and_guards.mmd",
+      "type": "flowchart",
+      "direction": "TB",
+      "sources": ["CONSTITUTION.md:Article I-II", "BACKEND_HIERARCHY_AUDIT.md"]
+    },
+    {
+      "id": "upload_pipeline",
+      "filename": "upload_pipeline.mmd",
+      "type": "sequenceDiagram",
+      "sources": ["VERIFICATION_REPORT.md:Objective 2", "backend/app/routers/uploads.py"]
+    }
+  ]
+}

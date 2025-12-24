@@ -162,6 +162,16 @@ export const ResizableImage = Node.create({
       },
       width: {
         default: null,
+        parseHTML: (element) => {
+          // Extract width from style attribute
+          const style = element.getAttribute("style") || "";
+          const widthMatch = style.match(/width:\s*([^;]+)/);
+          if (widthMatch) {
+            return widthMatch[1].trim();
+          }
+          // Also check for width attribute directly
+          return element.getAttribute("width") || null;
+        },
         renderHTML: (attributes) => {
           if (!attributes.width) {
             return {};
