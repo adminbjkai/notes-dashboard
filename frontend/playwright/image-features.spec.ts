@@ -204,7 +204,8 @@ test.describe("Image Upload", () => {
       await page.waitForTimeout(1000);
 
       // Verify an image with /uploads/ URL is in the editor
-      const uploadedImage = page.locator('img[src^="/uploads/"]');
+      // Note: src may be absolute (http://localhost:8000/uploads/...) or relative (/uploads/...)
+      const uploadedImage = page.locator('img[src*="/uploads/"]');
       await expect(uploadedImage).toHaveCount(1, { timeout: 10000 });
 
       // Verify the resize controls are visible

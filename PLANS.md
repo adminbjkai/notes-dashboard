@@ -140,3 +140,49 @@
 - **Before:** 37/40 passing (92.5%)
 - **After:** 38/40 passing (95%)
 - 2 remaining flaky tests: Position-precision edge cases (timing-sensitive, not critical)
+
+## Implementation Phase (2025-12-24)
+
+**Goal:** Remove /docs route, fix file picker upload bug, add quality gates.
+
+### Objective 1: Remove /docs Route + Add Guard
+
+**Files to Delete:**
+- `frontend/app/docs/` (entire directory)
+- `frontend/components/docs/` (entire directory)
+- `frontend/lib/docs-api.ts`
+- `frontend/types/docs.ts`
+
+**Guard Script:**
+- Create `scripts/forbid_docs_route.sh`
+- Fails CI if `frontend/app/docs/` exists
+
+### Objective 2: Fix File Picker Upload Bug
+
+**Investigation:**
+1. Compare file picker upload vs URL insertion flow
+2. Check backend upload endpoint for:
+   - HEIC support
+   - File size limits
+   - Content-Type handling
+   - Error response surfacing
+
+**Likely Issues:**
+- Silent failures (no UI error feedback)
+- HEIC images not handled
+- Large file rejection without user notification
+
+**Fix Approach:**
+- Improve error handling in slash-command.tsx
+- Surface backend error messages to user
+- Add file type validation before upload
+
+### Objective 3: Quality Gates
+
+**Discover Commands:**
+- Frontend: `npm run lint`, `npm run type-check`
+- Backend: `ruff check`, `mypy`
+
+**Verification:**
+- Run all commands and document results
+- Update VERIFICATION_REPORT.md

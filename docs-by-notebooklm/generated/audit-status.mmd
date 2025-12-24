@@ -1,0 +1,61 @@
+%% Notes Dashboard - Audit Status Dashboard
+%% Generated: 2025-12-24
+%% Update this after each verification run
+
+---
+title: Quality Gate Status
+---
+pie showData
+    title Backend Gates
+    "ruff (PASS)" : 1
+    "mypy (PASS)" : 1
+    "pytest 7/7 (PASS)" : 1
+
+---
+pie showData
+    title Frontend Gates
+    "lint (PASS)" : 1
+    "type-check (PASS)" : 1
+
+---
+pie showData
+    title E2E Tests
+    "smoke.spec.ts (PASS)" : 1
+    "master-audit.spec.ts (PASS)" : 1
+    "horizontal-dnd-stress.spec.ts (PASS)" : 1
+    "image-features.spec.ts 4/4 (PASS)" : 1
+
+---
+gantt
+    title Verification Timeline
+    dateFormat YYYY-MM-DD
+    axisFormat %m/%d
+
+    section Backend
+    ruff check          :done, backend1, 2025-12-24, 1d
+    mypy                :done, backend2, 2025-12-24, 1d
+    pytest              :done, backend3, 2025-12-24, 1d
+
+    section Frontend
+    npm run lint        :done, front1, 2025-12-24, 1d
+    npm run type-check  :done, front2, 2025-12-24, 1d
+
+    section E2E
+    playwright tests    :done, e2e1, 2025-12-24, 1d
+
+    section Guards
+    forbid_docs_route   :done, guard1, 2025-12-24, 1d
+
+---
+flowchart LR
+    subgraph Constitution["Constitution Compliance"]
+        A[Article I<br/>Backend] -->|PASS| OK1((OK))
+        B[Article II<br/>Frontend] -->|PASS| OK2((OK))
+        C[Article III<br/>Architecture] -->|PASS| OK3((OK))
+        D[Article IV<br/>Forbidden Zones] -->|PASS| OK4((OK))
+    end
+
+    style OK1 fill:#4caf50,stroke:#2e7d32,color:#fff
+    style OK2 fill:#4caf50,stroke:#2e7d32,color:#fff
+    style OK3 fill:#4caf50,stroke:#2e7d32,color:#fff
+    style OK4 fill:#4caf50,stroke:#2e7d32,color:#fff

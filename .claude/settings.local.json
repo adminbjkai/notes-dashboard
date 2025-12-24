@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__ide__getDiagnostics",
+      "Bash(npx playwright test:*)",
+      "Bash(grep:*)",
+      "Bash(tree:*)",
+      "Bash(npx tsc:*)",
+      "Bash(ls:*)",
+      "Bash(docker compose:*)",
+      "Bash(curl:*)",
+      "Bash(python3:*)",
+      "Bash(mkdir:*)",
+      "Bash(cat:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npm install:*)",
+      "Bash(git fetch:*)",
+      "Bash(git reset:*)",
+      "Bash(pip3 install:*)"
+    ]
+  }
+}

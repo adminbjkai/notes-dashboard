@@ -1,0 +1,40 @@
+%% Notes Dashboard - Drag-and-Drop Zone Strategy
+%% Generated: 2025-12-24
+%% Source: CONSTITUTION.md Article II Section 2.1
+
+graph TB
+    subgraph NoteItem["Note Item (100% height)"]
+        direction TB
+        TopZone["Top 35%<br/>─────────────<br/>DROP: Insert BEFORE<br/>(sibling above)"]
+        MiddleZone["Middle 30%<br/>─────────────<br/>DROP: Nest as CHILD<br/>(indent under target)"]
+        BottomZone["Bottom 35%<br/>─────────────<br/>DROP: Insert AFTER<br/>(sibling below)"]
+    end
+
+    subgraph HorizontalThresholds["Horizontal Drag Thresholds"]
+        direction LR
+        Outdent["← -40px<br/>OUTDENT<br/>Move to grandparent"]
+        Neutral["0px<br/>NEUTRAL<br/>Use vertical zone"]
+        Indent["+40px →<br/>INDENT<br/>Force nest into target"]
+    end
+
+    subgraph RootZone["Root Drop Zone"]
+        LeftStrip["20px left strip<br/>─────────────<br/>DROP: Move to ROOT<br/>(parent_id = null)"]
+    end
+
+    subgraph VisualFeedback["Visual Feedback"]
+        Valid["Valid Target<br/>Blue highlight ring"]
+        Invalid["Invalid Target<br/>Red border + no-drop cursor"]
+        OutdentHighlight["Outdent Target<br/>Indigo highlight on parent"]
+    end
+
+    %% Styling
+    style TopZone fill:#c8e6c9,stroke:#2e7d32
+    style MiddleZone fill:#bbdefb,stroke:#1565c0
+    style BottomZone fill:#c8e6c9,stroke:#2e7d32
+    style Outdent fill:#ffccbc,stroke:#e64a19
+    style Neutral fill:#fff9c4,stroke:#f9a825
+    style Indent fill:#dcedc8,stroke:#689f38
+    style LeftStrip fill:#e1bee7,stroke:#8e24aa
+    style Valid fill:#b2dfdb,stroke:#00796b
+    style Invalid fill:#ffcdd2,stroke:#c62828
+    style OutdentHighlight fill:#c5cae9,stroke:#3949ab

@@ -1,0 +1,40 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit",
+        "condition": "toolInput.file_path.includes('backend/') && toolInput.file_path.endsWith('.py')",
+        "commands": [
+          "echo '🔍 Running backend quality checks...'",
+          "cd /Users/m17/codex-bjkai/notes-dashboard-by-claude && docker compose exec -T backend ruff check app/ --output-format=concise 2>&1 | head -20 || true",
+          "cd /Users/m17/codex-bjkai/notes-dashboard-by-claude && docker compose exec -T backend mypy app --ignore-missing-imports --no-error-summary 2>&1 | grep -E 'error:|warning:' | head -10 || echo '✅ mypy: OK'"
+        ]
+      },
+      {
+        "matcher": "Edit",
+        "condition": "toolInput.file_path.includes('frontend/') && (toolInput.file_path.endsWith('.ts') || toolInput.file_path.endsWith('.tsx'))",
+        "commands": [
+          "echo '🔍 Running frontend quality checks...'",
+          "cd /Users/m17/codex-bjkai/notes-dashboard-by-claude/frontend && npm run lint --silent 2>&1 | head -20 || true",
+          "cd /Users/m17/codex-bjkai/notes-dashboard-by-claude/frontend && npm run type-check --silent 2>&1 | grep -E 'error|Error' | head -10 || echo '✅ type-check: OK'"
+        ]
+      },
+      {
+        "matcher": "Write",
+        "condition": "toolInput.file_path.includes('backend/') && toolInput.file_path.endsWith('.py')",
+        "commands": [
+          "echo '🔍 Running backend quality checks...'",
+          "cd /Users/m17/codex-bjkai/notes-dashboard-by-claude && docker compose exec -T backend ruff check app/ --output-format=concise 2>&1 | head -20 || true"
+        ]
+      },
+      {
+        "matcher": "Write",
+        "condition": "toolInput.file_path.includes('frontend/') && (toolInput.file_path.endsWith('.ts') || toolInput.file_path.endsWith('.tsx'))",
+        "commands": [
+          "echo '🔍 Running frontend quality checks...'",
+          "cd /Users/m17/codex-bjkai/notes-dashboard-by-claude/frontend && npm run lint --silent 2>&1 | head -20 || true"
+        ]
+      }
+    ]
+  }
+}

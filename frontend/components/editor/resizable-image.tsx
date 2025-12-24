@@ -2,8 +2,23 @@
 
 import { Node, mergeAttributes } from "@tiptap/core";
 import { NodeViewWrapper, NodeViewProps, ReactNodeViewRenderer } from "@tiptap/react";
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef } from "react";
 import { cn } from "@/lib/utils";
+
+// Get the backend URL for uploaded images
+function getImageUrl(src: string): string {
+  // If already absolute URL, use as-is
+  if (src.startsWith("http://") || src.startsWith("https://") || src.startsWith("data:")) {
+    return src;
+  }
+  // For relative /uploads/ paths, prepend the backend URL
+  if (src.startsWith("/uploads/")) {
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    return `${backendUrl}${src}`;
+  }
+  // For other relative paths, return as-is
+  return src;
+}
 
 // Custom image component with resize handles
 function ResizableImageComponent({ node, updateAttributes, selected }: NodeViewProps) {
@@ -69,7 +84,7 @@ function ResizableImageComponent({ node, updateAttributes, selected }: NodeViewP
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           ref={imgRef}
-          src={src}
+          src={getImageUrl(src)}
           alt={alt || ""}
           style={{ width: width || "auto" }}
           className="max-w-full h-auto rounded"

@@ -1,0 +1,61 @@
+A Simple Guide to Our Application's Architecture
+1. Introduction: A Restaurant Analogy for Full-Stack Development
+Welcome! If you're new to how web applications are built, it can seem like a lot to take in. This guide will break down the architecture of this note-taking application into simple, understandable parts.
+To make things easier, let's think of the application like a restaurant. Every modern application has three main components, and each plays a role similar to a part of a restaurant:
+• Frontend (The Dining Area): This is everything you, the user, can see and interact with—the tables, the menus, the decor. In our application, this is the user interface in your web browser, like the sidebar with your notes and the editor where you write.
+• Backend (The Kitchen): This is where the work happens behind the scenes. When you place an order (create a note), the kitchen (backend) processes it, follows the recipe (applies business logic), and prepares the meal (manages the data).
+• Database (The Pantry): This is where all the raw ingredients are stored. The kitchen needs a well-organized pantry to retrieve ingredients and store new ones. Our database stores all the note data, ensuring nothing is lost.
+This document will walk you through how this project's "Dining Area," "Kitchen," and "Pantry" are built and how they work together seamlessly. Let's start with a bird's-eye view of how these pieces are connected.
+2. The Big Picture: Our Application's Three Core Components
+The application is cleanly divided into three distinct services that communicate with each other inside a Docker network. This separation is a key design choice: it allows the frontend and backend to be developed, scaled, and deployed independently. As shown in the network diagram, the frontend service sends requests to the backend service, which in turn communicates with the db service to read or write data.
+Here is a summary of the core technologies used for each component:
+Component
+Technology
+Primary Role
+Frontend
+Next.js
+Builds the user interface you see in your browser.
+Backend
+FastAPI
+Manages data, logic, and talks to the database.
+Database
+PostgreSQL
+Stores and retrieves all the note data permanently.
+Now, let's take a closer look at the part you directly interact with—the frontend.
+3. The Frontend: What You See and Click
+The frontend is the visual, interactive part of the application that runs in your browser. You can access it at http://localhost:3000. It’s responsible for displaying the notes, handling your clicks, and providing the editing experience.
+Here are the three most important technologies that power the frontend:
+• Next.js 15: This is the primary framework used to build the entire user interface. It uses the "App Router" to manage pages and render all the components you see, such as the note editor, the hierarchical sidebar, and the drag-and-drop reordering functionality.
+• Tailwind CSS: This tool styles every visual element, from buttons to text. It ensures the application has a clean, modern, and responsive design, and it also powers features like the switch between light and dark modes.
+• TipTap: This is the powerful rich-text editor at the heart of the application. It's what allows you to write and format your notes, create tables, add images, and use handy "slash commands" (typing /) to quickly insert different content blocks like code blocks with syntax highlighting, task lists, and callouts.
+But when you create a new note or edit text, where does that information go? That's the job of our backend.
+4. The Backend: The Application's Engine
+The backend is the application's engine room. It runs on a server, has no user interface of its own, and is responsible for processing requests, enforcing rules, and managing data. The frontend communicates with it through an API, which is accessible at http://localhost:8000.
+The backend is built with FastAPI, a modern Python framework. Its key responsibilities include:
+• Handling API Requests: It listens for requests from the frontend to perform actions like creating, updating, deleting, or reordering notes.
+• Business Logic: It contains all the application's rules. For example, it includes logic to prevent a note from being moved inside one of its own children, which would create an impossible "circular reference." It is also responsible for position normalization, which ensures notes in the sidebar maintain a clean, sequential order ([0, 1, 2...]) after any drag-and-drop operation.
+• Database Communication: It uses a tool called SQLAlchemy to communicate with the PostgreSQL database. It translates simple requests from the frontend (like "save this note") into complex database operations, ensuring data is stored and retrieved correctly.
+The backend processes all the logic, but it needs a place to store the data permanently. That's where our database comes in.
+5. The Database: The Application's Memory
+The database serves as the application's permanent memory. It's where every piece of note data is stored safely. This project uses PostgreSQL 16, a powerful and reliable database system.
+For each note, the database stores several key fields:
+• title: The title of the note.
+• content: The main body of the note, stored in Markdown format.
+• sidenote: An optional field for a secondary annotation or comment.
+• parent_id: This crucial field links a note to its parent. If it's null, the note is at the top level of the hierarchy.
+• position: A number that dictates the note's display order among its siblings in the sidebar, ensuring your notes stay organized exactly as you arrange them.
+Because the data is stored here, it persists even if you refresh the page or restart the entire application, as demonstrated by the persistence tests.
+So we have the frontend for the user, the backend for the logic, and the database for storage. How do they all communicate with each other?
+6. How They Talk: A Journey Across the Network
+The frontend and backend communicate by sending data back and forth using standard HTTP requests, much like your browser requests a webpage from a server. However, this application is smart about how it does this, using two different communication paths depending on the context.
+Communication Path
+URL Used
+Why it's different
+Browser to Backend
+http://localhost:8000
+When you perform an action in your browser (like saving a note), your browser sends a request from "outside" the Docker network directly to the backend's publicly exposed address.
+Frontend Server to Backend
+http://backend:8000
+Next.js can also run code on the server before sending a page to you. This server-side code communicates with the backend "inside" Docker's private network, using the internal service name (backend), which is faster and more secure.
+This dual-URL strategy is crucial for both performance and security. It uses a fast, private internal network for server-side operations while exposing a controlled public endpoint for interactions originating from the user's browser.
+Understanding this flow gives you a complete picture of how a modern full-stack application works, from the click of a button to the permanent storage of your data.

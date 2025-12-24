@@ -10,8 +10,8 @@ router = APIRouter()
 UPLOAD_DIR = Path("/app/uploads")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
-# Allowed file extensions for images
-IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"}
+# Allowed file extensions for images (includes HEIC for Mac photos)
+IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".heic", ".heif"}
 
 # Max file size: 10MB
 MAX_FILE_SIZE = 10 * 1024 * 1024

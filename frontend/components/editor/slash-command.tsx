@@ -135,6 +135,13 @@ const COMMANDS: CommandItem[] = [
       input.onchange = async (e) => {
         const file = (e.target as HTMLInputElement).files?.[0];
         if (file) {
+          // Client-side file size check (10MB limit)
+          const MAX_FILE_SIZE = 10 * 1024 * 1024;
+          if (file.size > MAX_FILE_SIZE) {
+            alert(`File too large: ${(file.size / 1024 / 1024).toFixed(1)}MB (max 10MB)`);
+            return;
+          }
+
           const formData = new FormData();
           formData.append("file", file);
           try {
@@ -147,10 +154,14 @@ const COMMANDS: CommandItem[] = [
               const { url } = await res.json();
               editor.chain().focus().insertContent({ type: "image", attrs: { src: url } }).run();
             } else {
-              alert("Failed to upload image");
+              // Surface the actual error message from backend
+              const errorData = await res.json().catch(() => ({ detail: "Unknown error" }));
+              const errorMsg = errorData.detail || `Upload failed (${res.status})`;
+              alert(`Failed to upload image: ${errorMsg}`);
             }
-          } catch {
-            alert("Failed to upload image");
+          } catch (err) {
+            console.error("Image upload error:", err);
+            alert("Failed to upload image: Network error or server unavailable");
           }
         }
       };
@@ -182,6 +193,13 @@ const COMMANDS: CommandItem[] = [
       input.onchange = async (e) => {
         const file = (e.target as HTMLInputElement).files?.[0];
         if (file) {
+          // Client-side file size check (10MB limit)
+          const MAX_FILE_SIZE = 10 * 1024 * 1024;
+          if (file.size > MAX_FILE_SIZE) {
+            alert(`File too large: ${(file.size / 1024 / 1024).toFixed(1)}MB (max 10MB)`);
+            return;
+          }
+
           const formData = new FormData();
           formData.append("file", file);
           try {
@@ -198,10 +216,14 @@ const COMMANDS: CommandItem[] = [
                 attrs: { href: url, filename },
               }).run();
             } else {
-              alert("Failed to upload file");
+              // Surface the actual error message from backend
+              const errorData = await res.json().catch(() => ({ detail: "Unknown error" }));
+              const errorMsg = errorData.detail || `Upload failed (${res.status})`;
+              alert(`Failed to upload file: ${errorMsg}`);
             }
-          } catch {
-            alert("Failed to upload file");
+          } catch (err) {
+            console.error("File upload error:", err);
+            alert("Failed to upload file: Network error or server unavailable");
           }
         }
       };

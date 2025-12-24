@@ -1,0 +1,51 @@
+%% Notes Dashboard - Data Flow Sequences
+%% Generated: 2025-12-24
+%% Source: CONSTITUTION.md + note_service.py
+
+sequenceDiagram
+    autonumber
+    participant U as User
+    participant FE as Frontend<br/>(Next.js)
+    participant BE as Backend<br/>(FastAPI)
+    participant DB as PostgreSQL
+
+    Note over U,DB: Reorder Operation (Article I Section 1.4)
+
+    U->>FE: Drag note to new position
+    FE->>FE: Calculate drop zone (35/30/35)
+    FE->>FE: Check horizontal offset (±40px)
+    FE->>BE: POST /api/notes/reorder<br/>{note_id, parent_id, position}
+
+    BE->>DB: UPDATE note SET position = 999999<br/>(temporary, avoid conflicts)
+    BE->>DB: SELECT * FROM notes<br/>WHERE parent_id = ?<br/>ORDER BY position, created_at, id
+
+    Note over BE: _normalize_positions()
+    loop For each sibling at index i
+        BE->>DB: UPDATE notes SET position = i
+    end
+
+    BE->>FE: 200 OK {normalized tree}
+    FE->>U: UI updates with new hierarchy
+
+    Note over U,DB: Image Upload Operation
+
+    U->>FE: Select file via slash command
+    FE->>FE: Validate file size (≤10MB)
+    FE->>BE: POST /api/uploads<br/>(multipart/form-data)
+    BE->>BE: Generate UUID filename
+    BE->>BE: Save to /app/uploads/
+    BE->>FE: {url: "/uploads/abc123.png"}
+    FE->>FE: Prepend http://localhost:8000
+    FE->>U: Image rendered in TipTap
+
+    Note over U,DB: Delete Operation (Atomic)
+
+    U->>FE: Delete note via context menu
+    FE->>BE: DELETE /api/notes/{id}
+    BE->>DB: DELETE FROM notes WHERE id = ?
+    BE->>DB: db.flush()
+    BE->>DB: _normalize_positions(parent_id)
+    BE->>DB: db.commit()
+    Note over BE: Single transaction!
+    BE->>FE: 200 OK
+    FE->>U: Note removed from tree

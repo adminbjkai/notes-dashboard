@@ -1,0 +1,62 @@
+%% Notes Dashboard - Architecture Overview
+%% Generated: 2025-12-24
+%% Source: CONSTITUTION.md + System Hardening Case Study
+
+graph TB
+    subgraph Browser["Browser (User)"]
+        direction TB
+        TipTap[TipTap Editor<br/>Markdown ↔ HTML]
+        DnD[dnd-kit Sidebar<br/>35/30/35 zones]
+        Upload[File Upload<br/>Image + Attachment]
+    end
+
+    subgraph Frontend["Frontend (Next.js :3000)"]
+        direction TB
+        PageTree[page-tree.tsx<br/>Hierarchy UI]
+        Editor[Editor Components<br/>slash-command, resizable-image]
+        APIClient[API Client<br/>localhost:8000]
+    end
+
+    subgraph Backend["Backend (FastAPI :8000)"]
+        direction TB
+        NotesRouter[/api/notes<br/>CRUD + Reorder]
+        UploadsRouter[/api/uploads<br/>File Upload]
+        NoteService[NoteService<br/>_normalize_positions]
+        StaticMount[/uploads<br/>Static Files]
+    end
+
+    subgraph Database["PostgreSQL :5432"]
+        Notes[(notes table<br/>id, title, content,<br/>parent_id, position)]
+    end
+
+    subgraph Storage["File Storage"]
+        UploadDir[/app/uploads/<br/>Images & Attachments]
+    end
+
+    %% Browser to Frontend
+    TipTap --> Editor
+    DnD --> PageTree
+    Upload --> Editor
+
+    %% Frontend internal
+    PageTree --> APIClient
+    Editor --> APIClient
+
+    %% Frontend to Backend
+    APIClient -->|HTTP localhost:8000| NotesRouter
+    APIClient -->|HTTP localhost:8000| UploadsRouter
+
+    %% Backend internal
+    NotesRouter --> NoteService
+    UploadsRouter --> UploadDir
+    StaticMount --> UploadDir
+
+    %% Backend to Database
+    NoteService -->|SQLAlchemy| Notes
+
+    %% Styling
+    style Browser fill:#e3f2fd,stroke:#1976d2
+    style Frontend fill:#fff3e0,stroke:#f57c00
+    style Backend fill:#e8f5e9,stroke:#388e3c
+    style Database fill:#fce4ec,stroke:#c2185b
+    style Storage fill:#f3e5f5,stroke:#7b1fa2
