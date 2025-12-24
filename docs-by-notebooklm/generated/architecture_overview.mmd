@@ -1,49 +1,43 @@
-%%{init: {'theme': 'default'}}%%
+%%{init: {'theme': 'default', 'themeVariables': {'fontSize': '14px'}}}%%
 flowchart TB
-    subgraph Docker["Docker Compose Environment"]
-        subgraph Frontend["Frontend Container :3000"]
-            NextJS["Next.js 15.x"]
-            TipTap["TipTap Editor"]
-            DndKit["dnd-kit"]
-            Tailwind["Tailwind CSS"]
-        end
-
-        subgraph Backend["Backend Container :8000"]
-            FastAPI["FastAPI"]
-            SQLAlchemy["SQLAlchemy ORM"]
-            NoteService["NoteService"]
-            UploadRouter["Upload Router"]
-        end
-
-        subgraph Database["Database Container :5432"]
-            PostgreSQL["PostgreSQL"]
-            NotesTable["notes table"]
-            UploadsDir["uploads/ directory"]
-        end
+    subgraph Client["Browser"]
+        Browser["User"]
     end
 
-    subgraph Client["Browser Client"]
-        Browser["User Browser"]
+    subgraph Frontend["Frontend :3000"]
+        Next["Next.js 15"]
+        Editor["TipTap Editor"]
+        DnD["dnd-kit"]
+        Sidebar["Page Tree"]
     end
 
-    Browser -->|"HTTP :3000"| NextJS
-    NextJS -->|"API Requests"| FastAPI
-    NextJS -->|"SSR via backend:8000"| FastAPI
-    FastAPI --> SQLAlchemy
-    SQLAlchemy --> PostgreSQL
-    PostgreSQL --> NotesTable
-    UploadRouter --> UploadsDir
+    subgraph Backend["Backend :8000"]
+        API["FastAPI"]
+        Service["NoteService"]
+        Upload["UploadRouter"]
+    end
 
-    %% Source: CONSTITUTION.md Section 3.1
-    %% Browser Access: localhost:8000
-    %% Server Access: backend:8000
+    subgraph Data["Database :5432"]
+        PG["PostgreSQL"]
+        Notes["notes table"]
+        Files["/uploads/"]
+    end
 
+    Browser --> Next
+    Next --> API
+    Editor --> API
+    DnD --> Sidebar
+    API --> Service
+    Service --> PG
+    PG --> Notes
+    Upload --> Files
+
+    classDef client fill:#FEF3C7,stroke:#F59E0B,stroke-width:2px
     classDef frontend fill:#DBEAFE,stroke:#3B82F6,stroke-width:2px
     classDef backend fill:#D1FAE5,stroke:#10B981,stroke-width:2px
-    classDef database fill:#E9D5FF,stroke:#8B5CF6,stroke-width:2px
-    classDef client fill:#FEF3C7,stroke:#F59E0B,stroke-width:2px
+    classDef data fill:#E9D5FF,stroke:#8B5CF6,stroke-width:2px
 
-    class NextJS,TipTap,DndKit,Tailwind frontend
-    class FastAPI,SQLAlchemy,NoteService,UploadRouter backend
-    class PostgreSQL,NotesTable,UploadsDir database
     class Browser client
+    class Next,Editor,DnD,Sidebar frontend
+    class API,Service,Upload backend
+    class PG,Notes,Files data

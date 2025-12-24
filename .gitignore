@@ -39,3 +39,6 @@ docker-compose.mcp.yaml
 
 # Local screenshot artifacts
 .nd/
+
+# Rendered Mermaid exports (regenerated locally)
+docs-by-notebooklm/generated/rendered/

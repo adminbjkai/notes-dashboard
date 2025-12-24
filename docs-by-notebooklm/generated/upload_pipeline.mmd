@@ -1,62 +1,39 @@
-%%{init: {'theme': 'default'}}%%
+%%{init: {'theme': 'default', 'themeVariables': {'fontSize': '14px'}}}%%
 sequenceDiagram
     autonumber
-    participant User as User
-    participant Editor as TipTap Editor
-    participant Slash as Slash Command
-    participant Picker as File Picker
-    participant API as Backend API
-    participant Storage as /uploads/
-    participant Image as ResizableImage
+    participant U as User
+    participant E as TipTap
+    participant S as SlashCmd
+    participant A as Backend
+    participant D as /uploads/
 
-    Note over User,Image: Upload Flow (Fixed)
+    Note over U,D: Upload Flow
 
-    User->>Editor: Types "/" in editor
-    Editor->>Slash: Show slash command menu
-    User->>Slash: Select "Image (upload)"
-    Slash->>Picker: Open file picker dialog
-    User->>Picker: Select image file
-
-    rect rgb(254, 243, 199)
-        Note over Picker,API: Client-side validation
-        Picker->>Picker: Check file size < 10MB
-        Picker->>Picker: Check file extension
-    end
-
-    Picker->>API: POST /api/uploads/images
+    U->>E: Type "/"
+    E->>S: Show menu
+    U->>S: Select image
+    S->>S: Validate <10MB
 
     rect rgb(209, 250, 229)
-        Note over API,Storage: Backend processing
-        API->>API: Validate MIME type
-        API->>API: Generate unique filename
-        API->>Storage: Save file to disk
-        Storage-->>API: File saved
-        API-->>Picker: Return { url: "/uploads/abc123.png" }
+        S->>A: POST /uploads
+        A->>A: Check MIME
+        A->>D: Save file
+        A-->>S: {url: "/uploads/x.png"}
     end
 
     rect rgb(219, 234, 254)
-        Note over Slash,Image: URL Transformation (THE FIX)
-        Slash->>Editor: Insert image node with src="/uploads/abc123.png"
-        Editor->>Image: Render ResizableImage component
-        Image->>Image: getImageUrl(src)
-        Note right of Image: if src.startsWith("/uploads/")<br/>return BACKEND_URL + src
-        Image->>Image: src = "http://localhost:8000/uploads/abc123.png"
+        Note over S,E: URL Transform
+        S->>E: Insert img node
+        E->>E: getImageUrl()
+        Note right of E: "/uploads/x.png"<br/>→ "localhost:8000/uploads/x.png"
     end
 
-    Image-->>User: Display image with resize controls
+    E-->>U: Display image
 
-    Note over User,Image: Persistence Flow
+    Note over U,D: Persistence
 
-    Editor->>API: Auto-save (PATCH /api/notes/:id)
-    API->>Storage: Store markdown with image reference
-
-    User->>Editor: Reload page
-    Editor->>API: GET /api/notes/:id
-    API-->>Editor: Return content with /uploads/ URL
-    Editor->>Image: Render with transformed URL
-    Image-->>User: Image displays correctly
-
-    %% Source: VERIFICATION_REPORT.md Objective 2
-    %% Fix location: frontend/components/editor/resizable-image.tsx
-    %% Problem: Relative URLs resolved against frontend origin (3000)
-    %% Solution: Transform to absolute backend URL (8000)
+    E->>A: Auto-save
+    U->>E: Reload
+    E->>A: GET /notes/:id
+    A-->>E: Content
+    E-->>U: Image displays
