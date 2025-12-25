@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notes-Dashboard Architecture Infographic</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --primary: #38bdf8;
+            --secondary: #8b5cf6;
+            --accent: #10b981;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --line: rgba(148, 163, 184, 0.2);
+        }
+
+        body {
+            margin: 0;
+            padding: 40px;
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            position: relative;
+            background: radial-gradient(circle at top right, rgba(56, 189, 248, 0.1), transparent),
+                radial-gradient(circle at bottom left, rgba(139, 92, 246, 0.1), transparent);
+            padding: 60px;
+            border-radius: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin: 0;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            color: var(--text-dim);
+            margin-top: 10px;
+            font-size: 1.1rem;
+        }
+
+        .architecture-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 60px;
+            position: relative;
+        }
+
+        /* Connecting Lines */
+        .architecture-grid::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 100px;
+            bottom: 100px;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--primary), var(--secondary), var(--accent));
+            opacity: 0.3;
+            transform: translateX(-50%);
+            z-index: 0;
+        }
+
+        .layer {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 24px;
+            width: 100%;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+        }
+
+        .layer-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .frontend .layer-title {
+            color: var(--primary);
+        }
+
+        .backend .layer-title {
+            color: var(--secondary);
+        }
+
+        .data .layer-title {
+            color: var(--accent);
+        }
+
+        .components {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+        }
+
+        .component {
+            background: rgba(15, 23, 42, 0.5);
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .component-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .component-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: block;
+        }
+
+        .component-desc {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            margin-top: 4px;
+            display: block;
+        }
+
+        .infra-badge {
+            margin-top: 60px;
+            padding: 12px 30px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px dashed var(--text-dim);
+            border-radius: 100px;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .connector-dot {
+            width: 12px;
+            height: 12px;
+            background: var(--bg);
+            border: 2px solid var(--primary);
+            border-radius: 50%;
+            margin: 20px 0;
+            z-index: 2;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(56, 189, 248, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(56, 189, 248, 0);
+            }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        .dot-primary {
+            border-color: var(--primary);
+        }
+
+        .dot-secondary {
+            border-color: var(--secondary);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Notes-Dashboard</h1>
+            <div class="subtitle">End-to-End Full-Stack Technical Architecture</div>
+        </header>
+
+        <div class="architecture-grid">
+
+            <!-- Frontend Layer -->
+            <div class="layer frontend">
+                <div class="layer-title">Frontend Layer</div>
+                <div class="card">
+                    <div class="components">
+                        <div class="component">
+                            <span class="component-icon">⚛️</span>
+                            <span class="component-name">Next.js 15</span>
+                            <span class="component-desc">App Router • SSR</span>
+                        </div>
+                        <div class="component">
+                            <span class="component-icon">🎨</span>
+                            <span class="component-name">TailwindCSS</span>
+                            <span class="component-desc">Utility-First UI</span>
+                        </div>
+                        <div class="component">
+                            <span class="component-icon">📝</span>
+                            <span class="component-name">TipTap</span>
+                            <span class="component-desc">Rich Text Editor</span>
+                        </div>
+                        <div class="component">
+                            <span class="component-icon">📂</span>
+                            <span class="component-name">@dnd-kit</span>
+                            <span class="component-desc">Tree Hierarchy</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="connector-dot pulse dot-primary"></div>
+
+            <!-- Backend Layer -->
+            <div class="layer backend">
+                <div class="layer-title">API & Logic Layer</div>
+                <div class="card">
+                    <div class="components">
+                        <div class="component">
+                            <span class="component-icon">⚡</span>
+                            <span class="component-name">FastAPI</span>
+                            <span class="component-desc">Python 3.12 • ASGI</span>
+                        </div>
+                        <div class="component">
+                            <span class="component-icon">🛡️</span>
+                            <span class="component-name">Pydantic</span>
+                            <span class="component-desc">Data Validation</span>
+                        </div>
+                        <div class="component">
+                            <span class="component-icon">🏗️</span>
+                            <span class="component-name">NoteService</span>
+                            <span class="component-desc">Business Logic</span>
+                        </div>
+                        <div class="component">
+                            <span class="component-icon">🔄</span>
+                            <span class="component-name">Recursive CTE</span>
+                            <span class="component-desc">Cycle Prevention</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="connector-dot dot-secondary"></div>
+
+            <!-- Data Layer -->
+            <div class="layer data">
+                <div class="layer-title">Data Layer</div>
+                <div class="card">
+                    <div class="components">
+                        <div class="component">
+                            <span class="component-icon">🐘</span>
+                            <span class="component-name">PostgreSQL 16</span>
+                            <span class="component-desc">Relational Storage</span>
+                        </div>
+                        <div class="component">
+                            <span class="component-icon">🔗</span>
+                            <span class="component-name">SQLAlchemy 2.0</span>
+                            <span class="component-desc">Typed ORM Logic</span>
+                        </div>
+                        <div class="component">
+                            <span class="component-icon">📜</span>
+                            <span class="component-name">Alembic</span>
+                            <span class="component-desc">Schema Migration</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <center>
+            <div class="infra-badge">
+                🐳 ORCHESTRATED VIA DOCKER COMPOSE
+            </div>
+        </center>
+    </div>
+
+</body>
+
+</html>

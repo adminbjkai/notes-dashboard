@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Systems Architecture - Notes Dashboard</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-page: #f9fafb;
+            --border-color: #d1d5db;
+            --text-heading: #111827;
+            --text-body: #374151;
+            --text-muted: #6b7280;
+            --primary: #2563eb;
+            --box-bg: #ffffff;
+            --group-bg: #f3f4f6;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-purple: #8b5cf6;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg-page);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-body);
+            display: flex;
+            justify-content: center;
+        }
+
+        .canvas {
+            width: 1100px;
+            background: white;
+            padding: 40px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        header {
+            border-bottom: 2px solid var(--text-heading);
+            margin-bottom: 40px;
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 22px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-heading);
+        }
+
+        .version-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .diagram-area {
+            display: grid;
+            grid-template-columns: 220px 1fr 220px;
+            gap: 40px;
+            align-items: center;
+            position: relative;
+            padding: 40px 0;
+        }
+
+        /* Group Containers */
+        .group {
+            border: 1.5px dashed var(--border-color);
+            background: var(--group-bg);
+            border-radius: 8px;
+            padding: 20px;
+            position: relative;
+        }
+
+        .group-label {
+            position: absolute;
+            top: -10px;
+            left: 10px;
+            background: white;
+            padding: 0 10px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        /* Component Nodes */
+        .node {
+            background: var(--box-bg);
+            border: 1.5px solid var(--border-color);
+            border-radius: 4px;
+            padding: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .node.active {
+            border-color: var(--primary);
+            border-width: 2px;
+        }
+
+        .node-header {
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-heading);
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+        }
+
+        .node-tech {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--primary);
+            background: #eff6ff;
+            padding: 2px 4px;
+            border-radius: 2px;
+            width: fit-content;
+        }
+
+        .node-details {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 6px;
+            line-height: 1.4;
+        }
+
+        /* Connecting Lines & Arrows */
+        .arrow-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .arrow {
+            height: 2px;
+            background: var(--border-color);
+            width: 100%;
+            position: relative;
+            margin: 20px 0;
+        }
+
+        .arrow::after {
+            content: '';
+            position: absolute;
+            right: -2px;
+            top: -4px;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            border-left: 8px solid var(--border-color);
+        }
+
+        .arrow-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            background: white;
+            padding: 2px 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            position: absolute;
+            white-space: nowrap;
+        }
+
+        /* Database Icon */
+        .db-shape {
+            width: 40px;
+            height: 50px;
+            border: 2px solid var(--border-color);
+            border-radius: 50% / 15%;
+            position: relative;
+            background: white;
+            margin: 0 auto 10px;
+        }
+
+        .db-shape::before {
+            content: '';
+            position: absolute;
+            top: 5px;
+            left: -2px;
+            width: 100%;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid var(--border-color);
+        }
+
+        .footer-info {
+            margin-top: 40px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            font-size: 12px;
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .group-app-stack {
+            background: #f8fafc;
+            border-color: var(--accent-blue);
+        }
+
+        .group-label-accent {
+            color: var(--accent-blue);
+        }
+
+        .node-flex {
+            display: flex;
+            gap: 30px;
+        }
+
+        .node-full {
+            flex: 1;
+        }
+
+        .node-dashed {
+            margin-top: 10px;
+            border-style: dashed;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .node-header-center {
+            justify-content: center;
+        }
+
+        .node-tech-center {
+            margin: 0 auto;
+        }
+
+        .node-tech-top {
+            margin-top: 10px;
+        }
+
+        .arrow-pos-1 {
+            position: absolute;
+            top: 220px;
+            left: 260px;
+            width: 60px;
+        }
+
+        .arrow-pos-2 {
+            position: absolute;
+            top: 220px;
+            left: 780px;
+            width: 60px;
+        }
+
+        .bold-mb {
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .m0-muted {
+            margin: 0;
+            color: var(--text-muted);
+        }
+
+        .dot-bg-primary {
+            background: var(--primary);
+        }
+
+        .dot-bg-accent {
+            background: var(--accent-blue);
+            border: 1px dashed #ccc;
+        }
+
+        .dot-bg-muted {
+            background: var(--text-muted);
+        }
+
+        .footer-timestamp {
+            margin-top: 15px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="canvas">
+        <header>
+            <div>
+                <h1>Architecture Specification: Notes Dashboard</h1>
+                <div class="subtitle">Technical Topology & Data Flow
+                    Diagram</div>
+            </div>
+            <div class="version-badge">v1.2.0 | Reference: END-TO-END-STACK</div>
+        </header>
+
+        <div class="diagram-area">
+
+            <!-- External / Client Zone -->
+            <div class="group">
+                <div class="group-label">External / Browser</div>
+                <div class="node">
+                    <div class="node-header">End User Browser</div>
+                    <div class="node-tech">Client-Side</div>
+                    <div class="node-details">
+                        • React State (Hooks)<br>
+                        • TipTap Editor Engine<br>
+                        • Drag-and-Drop (DndKit)
+                    </div>
+                </div>
+            </div>
+
+            <!-- Application Logic Zone -->
+            <div class="group group-app-stack">
+                <div class="group-label group-label-accent">Docker Container: Application Stack</div>
+
+                <div class="node-flex">
+                    <div class="node active node-full">
+                        <div class="node-header">Frontend Application</div>
+                        <div class="node-tech">Next.js 15 (App Router)</div>
+                        <div class="node-details">
+                            • Server Components (RSC)<br>
+                            • Tailwind CSS JIT<br>
+                            • API Client (Fetch)
+                        </div>
+                    </div>
+
+                    <div class="node active node-full">
+                        <div class="node-header">REST API Server</div>
+                        <div class="node-tech">FastAPI + Uvicorn</div>
+                        <div class="node-details">
+                            • Async I/O Endpoints<br>
+                            • Pydantic Schema Validation<br>
+                            • NoteService Logic
+                        </div>
+                    </div>
+                </div>
+
+                <div class="node node-dashed">
+                    <div class="node-header">Hierarchy Middleware</div>
+                    <div class="node-tech">Logic Layer</div>
+                    <div class="node-details">
+                        • Recursive CTE Cycle Checks<br>
+                        • Position Normalization<br>
+                        • Audit Log Hooks
+                    </div>
+                </div>
+            </div>
+
+            <!-- Persistence Zone -->
+            <div class="group">
+                <div class="group-label">Persistence Layer</div>
+                <div class="text-center">
+                    <div class="db-shape"></div>
+                    <div class="node">
+                        <div class="node-header node-header-center">PostgreSQL 16</div>
+                        <div class="node-tech node-tech-center">RDBMS</div>
+                        <div class="node-details">
+                            • Relational Schema<br>
+                            • ACID Compliance<br>
+                            • Cascading Deletes
+                        </div>
+                    </div>
+                    <div class="node-tech node-tech-top">Alembic Migrations</div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Connection Annotations -->
+        <div class="arrow-container arrow-pos-1">
+            <div class="arrow"></div>
+            <div class="arrow-label">HTTP/3000</div>
+        </div>
+
+        <div class="arrow-container arrow-pos-2">
+            <div class="arrow"></div>
+            <div class="arrow-label">TCP/5432</div>
+        </div>
+
+        <div class="footer-info">
+            <div>
+                <strong class="bold-mb">Technical Specification Summary</strong>
+                <p class="m0-muted">
+                    The architecture follows a standard 3-tier decoupling pattern. The <strong>Frontend</strong> is
+                    built for high-performance React 19 rendering, communicating with a <strong>FastAPI</strong> backend
+                    via structured JSON REST protocols. Data integrity is enforced at the database level with
+                    <strong>SQLAlchemy 2.0</strong> typed ORM and manual CTE recursive guards.
+                </p>
+            </div>
+            <div>
+                <strong class="bold-mb">Environment Legend</strong>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="dot dot-bg-primary"></div> Primary Node
+                    </div>
+                    <div class="legend-item">
+                        <div class="dot dot-bg-accent"></div> Docker
+                        Network
+                    </div>
+                    <div class="legend-item">
+                        <div class="dot dot-bg-muted"></div> External Entity
+                    </div>
+                </div>
+                <p class="footer-timestamp">
+                    Generated on 2025-12-25 | Confidential System Doc
+                </p>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>
