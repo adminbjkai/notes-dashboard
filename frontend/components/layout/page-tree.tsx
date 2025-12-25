@@ -30,12 +30,10 @@ import {
   ChevronRight,
   FilePlus,
   GripVertical,
-  ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createNote, updateNote, deleteNote, reorderNote, buildNoteTree } from "@/lib/api";
 import type { Note, NoteTreeNode } from "@/types/note";
-import { NOTE_TEMPLATES, type NoteTemplate } from "@/lib/note-templates";
 
 interface PageTreeProps {
   pages: Note[];
@@ -333,8 +331,6 @@ export function PageTree({ pages }: PageTreeProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
-  const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<NoteTemplate | null>(null);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [activeId, setActiveId] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
@@ -488,13 +484,10 @@ export function PageTree({ pages }: PageTreeProps) {
       if (menuOpenId && !target.closest('[data-menu]')) {
         setMenuOpenId(null);
       }
-      if (templateMenuOpen && !target.closest('[data-template-menu]')) {
-        setTemplateMenuOpen(false);
-      }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [menuOpenId, templateMenuOpen]);
+  }, [menuOpenId]);
 
   const currentPageId = pathname.startsWith("/notes/")
     ? pathname.split("/notes/")[1]
@@ -512,13 +505,10 @@ export function PageTree({ pages }: PageTreeProps) {
     });
   }
 
-  async function handleCreatePage(parentId: string | null = null, template?: NoteTemplate) {
-    const tpl = template || NOTE_TEMPLATES[0];
-    setSelectedTemplate(tpl);
+  async function handleCreatePage(parentId: string | null = null) {
     setIsCreating(true);
     setCreateParentId(parentId);
-    setEditingTitle(tpl.defaultTitle);
-    setTemplateMenuOpen(false);
+    setEditingTitle("Untitled");
     if (parentId) {
       setExpandedIds((prev) => new Set([...prev, parentId]));
     }
@@ -529,20 +519,18 @@ export function PageTree({ pages }: PageTreeProps) {
       setIsCreating(false);
       setEditingTitle("");
       setCreateParentId(null);
-      setSelectedTemplate(null);
       return;
     }
 
     try {
       const newPage = await createNote({
         title: editingTitle.trim(),
-        content: selectedTemplate?.content || null,
+        content: null,
         parent_id: createParentId,
       });
       setIsCreating(false);
       setEditingTitle("");
       setCreateParentId(null);
-      setSelectedTemplate(null);
       router.push(`/notes/${newPage.id}`);
       router.refresh();
     } catch (err) {
@@ -869,6 +857,23 @@ export function PageTree({ pages }: PageTreeProps) {
 
   return (
     <div className="flex h-full flex-col">
+      {/* New Page button at top */}
+      <div className="shrink-0 p-2 pb-0">
+        <button
+          type="button"
+          onClick={() => handleCreatePage(null)}
+          disabled={isCreating}
+          className={cn(
+            "flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm text-gray-600 dark:text-gray-400",
+            "hover:bg-gray-100 dark:hover:bg-dark-elevated transition-colors",
+            "disabled:opacity-50 disabled:cursor-not-allowed"
+          )}
+        >
+          <Plus className="h-4 w-4" />
+          New Page
+        </button>
+      </div>
+
       <DndContext
         id={dndContextId}
         sensors={sensors}
@@ -927,40 +932,6 @@ export function PageTree({ pages }: PageTreeProps) {
           ) : null}
         </DragOverlay>
       </DndContext>
-
-      <div className="shrink-0 border-t border-gray-200 dark:border-dark-border p-2">
-        <div className="relative" data-template-menu>
-          <button
-            onClick={() => setTemplateMenuOpen(!templateMenuOpen)}
-            disabled={isCreating}
-            className={cn(
-              "flex w-full items-center justify-between gap-2 rounded px-2 py-1.5 text-sm text-gray-600 dark:text-gray-400",
-              "hover:bg-gray-100 dark:hover:bg-dark-elevated transition-colors",
-              "disabled:opacity-50 disabled:cursor-not-allowed"
-            )}
-          >
-            <span className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              New Page
-            </span>
-            <ChevronDown className={cn("h-3 w-3 transition-transform", templateMenuOpen && "rotate-180")} />
-          </button>
-          {templateMenuOpen && (
-            <div className="absolute bottom-full left-0 right-0 mb-1 rounded-md border border-gray-200 bg-white shadow-lg dark:border-dark-border dark:bg-dark-elevated">
-              {NOTE_TEMPLATES.map((template) => (
-                <button
-                  key={template.id}
-                  onClick={() => handleCreatePage(null, template)}
-                  className="flex w-full flex-col items-start px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-dark-muted first:rounded-t-md last:rounded-b-md"
-                >
-                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{template.title}</span>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">{template.description}</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
     </div>
   );
 }

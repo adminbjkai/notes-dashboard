@@ -186,3 +186,22 @@
 **Verification:**
 - Run all commands and document results
 - Update VERIFICATION_REPORT.md
+
+## Sidebar Simplification (completed 2025-12-25)
+
+**Goal:** Remove template system, simplify to single "New Page" action.
+
+### Changes Made
+1. **Removed template dropdown** - Bottom "New Page" button with template picker removed
+2. **Added top New Page button** - Simple button at top of page tree, above pages list
+3. **Deleted `note-templates.ts`** - Unused after removing template functionality
+4. **Simplified state** - Removed `templateMenuOpen`, `selectedTemplate` state variables
+5. **Simplified `handleCreatePage`** - No longer accepts template parameter, uses "Untitled" default
+
+### Files Modified
+- `frontend/components/layout/page-tree.tsx` - UI restructured, template logic removed
+- `frontend/lib/note-templates.ts` - Deleted (unused)
+
+### Validation
+- Frontend lint: passing
+- No unused imports or state variables remaining
