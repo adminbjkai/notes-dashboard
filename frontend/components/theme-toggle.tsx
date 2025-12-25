@@ -1,37 +1,34 @@
 "use client";
 
-import { Moon, Sun, Monitor } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { useTheme } from "./theme-provider";
 import { cn } from "@/lib/utils";
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
 
-  const cycleTheme = () => {
-    if (theme === "light") {
-      setTheme("dark");
-    } else if (theme === "dark") {
-      setTheme("system");
-    } else {
-      setTheme("light");
-    }
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
   };
 
   return (
     <button
-      onClick={cycleTheme}
+      type="button"
+      onClick={toggleTheme}
       className={cn(
-        "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm",
+        "flex items-center justify-center rounded-md p-1.5",
         "text-gray-600 dark:text-gray-400",
         "hover:bg-gray-100 dark:hover:bg-gray-800",
         "transition-colors"
       )}
-      title={`Current: ${theme}. Click to cycle.`}
+      title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+      aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
     >
-      {theme === "light" && <Sun className="h-4 w-4" />}
-      {theme === "dark" && <Moon className="h-4 w-4" />}
-      {theme === "system" && <Monitor className="h-4 w-4" />}
-      <span className="capitalize">{theme}</span>
+      {theme === "dark" ? (
+        <Sun className="h-4 w-4" />
+      ) : (
+        <Moon className="h-4 w-4" />
+      )}
     </button>
   );
 }
