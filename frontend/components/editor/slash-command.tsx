@@ -101,28 +101,12 @@ const COMMANDS: CommandItem[] = [
     keywords: ["pre", "programming", "syntax"],
   },
   {
-    title: "Table 2x2",
-    description: "Insert a small 2x2 table",
+    title: "Table",
+    description: "Insert a 2×4 table (use toolbar for custom size)",
     icon: <Table className="h-4 w-4" />,
     command: (editor) =>
-      editor.chain().focus().insertTable({ rows: 2, cols: 2, withHeaderRow: true }).run(),
-    keywords: ["grid", "small"],
-  },
-  {
-    title: "Table 3x3",
-    description: "Insert a medium 3x3 table",
-    icon: <Table className="h-4 w-4" />,
-    command: (editor) =>
-      editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(),
-    keywords: ["grid", "medium", "spreadsheet"],
-  },
-  {
-    title: "Table 4x4",
-    description: "Insert a large 4x4 table",
-    icon: <Table className="h-4 w-4" />,
-    command: (editor) =>
-      editor.chain().focus().insertTable({ rows: 4, cols: 4, withHeaderRow: true }).run(),
-    keywords: ["grid", "large", "data"],
+      editor.chain().focus().insertTable({ rows: 2, cols: 4, withHeaderRow: true }).run(),
+    keywords: ["grid", "spreadsheet", "data", "rows", "columns"],
   },
   {
     title: "Image (upload)",

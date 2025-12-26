@@ -1,50 +1,37 @@
 import { StarterKit } from "@tiptap/starter-kit";
-import { Table } from "@tiptap/extension-table";
 import { TableRow } from "@tiptap/extension-table-row";
 import { TableCell } from "@tiptap/extension-table-cell";
 import { TableHeader } from "@tiptap/extension-table-header";
-import { CodeBlockLowlight } from "@tiptap/extension-code-block-lowlight";
 import { TaskList } from "@tiptap/extension-task-list";
 import { TaskItem } from "@tiptap/extension-task-item";
 import { Placeholder } from "@tiptap/extension-placeholder";
-import { common, createLowlight } from "lowlight";
 import { ResizableImage } from "./resizable-image";
 import { createSlashCommandExtension } from "./slash-command";
 import { Callout } from "./callout-extension";
 import { FileAttachment } from "./file-attachment";
-
-const lowlight = createLowlight(common);
+import { CustomCodeBlock } from "./code-block-extension";
+import { CustomTable } from "./table-extension";
 
 export const editorExtensions = [
   StarterKit.configure({
-    codeBlock: false, // Use CodeBlockLowlight instead
+    codeBlock: false, // Use CustomCodeBlock instead
     heading: {
       levels: [1, 2, 3],
     },
   }),
-  Table.configure({
-    resizable: true,
-    HTMLAttributes: {
-      class: "border-collapse border border-gray-300",
-    },
-  }),
+  CustomTable,
   TableRow,
   TableCell.configure({
     HTMLAttributes: {
-      class: "border border-gray-300 px-3 py-2",
+      class: "border border-gray-200 dark:border-gray-700 px-2 py-1 text-sm",
     },
   }),
   TableHeader.configure({
     HTMLAttributes: {
-      class: "border border-gray-300 bg-gray-100 px-3 py-2 font-semibold",
+      class: "border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-2 py-1 text-sm font-medium",
     },
   }),
-  CodeBlockLowlight.configure({
-    lowlight,
-    HTMLAttributes: {
-      class: "bg-gray-900 text-gray-100 rounded-md p-4 my-2 overflow-x-auto",
-    },
-  }),
+  CustomCodeBlock,
   TaskList.configure({
     HTMLAttributes: {
       class: "not-prose pl-0",

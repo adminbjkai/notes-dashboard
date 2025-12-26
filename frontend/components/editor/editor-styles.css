@@ -68,38 +68,47 @@
   color: #ffa657;
 }
 
-/* Table styling in editor */
-.tiptap table {
+/* Table styling in editor - Compact Docmost-style */
+.tiptap table,
+.table-compact {
   border-collapse: collapse;
-  margin: 1rem 0;
+  margin: 0.5rem 0;
   overflow: hidden;
   table-layout: fixed;
   width: 100%;
+  font-size: 0.875rem;
 }
 
 .tiptap table td,
-.tiptap table th {
-  border: 1px solid #d1d5db;
+.tiptap table th,
+.table-compact td,
+.table-compact th {
+  border: 1px solid #e5e7eb;
   box-sizing: border-box;
   min-width: 1em;
-  padding: 0.5rem 0.75rem;
+  padding: 0.375rem 0.5rem;
   position: relative;
   vertical-align: top;
+  line-height: 1.4;
 }
 
 .dark .tiptap table td,
-.dark .tiptap table th {
-  border-color: #27272a;
+.dark .tiptap table th,
+.dark .table-compact td,
+.dark .table-compact th {
+  border-color: #374151;
 }
 
-.tiptap table th {
-  background-color: #f3f4f6;
-  font-weight: 600;
+.tiptap table th,
+.table-compact th {
+  background-color: #f9fafb;
+  font-weight: 500;
   text-align: left;
 }
 
-.dark .tiptap table th {
-  background-color: #18181b;
+.dark .tiptap table th,
+.dark .table-compact th {
+  background-color: #1f2937;
 }
 
 .tiptap table .selectedCell:after {

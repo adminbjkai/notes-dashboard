@@ -15,8 +15,8 @@ export async function AppShell({ children }: AppShellProps) {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      {/* Sidebar: basis-64 (256px) with page list */}
-      <div className="hidden shrink-0 basis-64 md:block">
+      {/* Sidebar: width controlled by sidebar component (expanded: 256px, collapsed: 48px) */}
+      <div className="hidden shrink-0 md:block">
         <Sidebar pages={pages} className="h-full" />
       </div>
 

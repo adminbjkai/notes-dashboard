@@ -1,9 +1,14 @@
 "use client";
 
 import { useEditor, EditorContent } from "@tiptap/react";
-import { useCallback } from "react";
-import { editorExtensions } from "./editor-extensions";
+import type { Editor } from "@tiptap/react";
+import { useCallback, useEffect } from "react";
+
+export type { Editor };
+export { EditorToolbar } from "./editor-toolbar";
 import { EditorToolbar } from "./editor-toolbar";
+import { editorExtensions } from "./editor-extensions";
+import { FloatingTableMenu } from "./floating-table-menu";
 import { cn } from "@/lib/utils";
 import { htmlToMarkdown, markdownToHtml } from "./markdown-converter";
 import { ImageUrlDialog } from "./image-url-dialog";
@@ -14,6 +19,7 @@ interface RichTextEditorProps {
   placeholder?: string;
   className?: string;
   showToolbar?: boolean;
+  onEditorReady?: (editor: ReturnType<typeof useEditor>) => void;
 }
 
 export function RichTextEditor({
@@ -22,6 +28,7 @@ export function RichTextEditor({
   placeholder = "Start writing...",
   className,
   showToolbar = false,
+  onEditorReady,
 }: RichTextEditorProps) {
   const handleUpdate = useCallback(
     ({ editor }: { editor: ReturnType<typeof useEditor> }) => {
@@ -60,6 +67,13 @@ export function RichTextEditor({
     immediatelyRender: false,
   });
 
+  // Notify parent when editor is ready
+  useEffect(() => {
+    if (editor && onEditorReady) {
+      onEditorReady(editor);
+    }
+  }, [editor, onEditorReady]);
+
   if (!editor) {
     return (
       <div className={cn("animate-pulse bg-gray-50 dark:bg-gray-800 min-h-[200px] rounded", className)} />
@@ -73,6 +87,7 @@ export function RichTextEditor({
           <EditorToolbar editor={editor} />
         </div>
       )}
+      <FloatingTableMenu editor={editor} />
       <EditorContent
         editor={editor}
         className="min-h-[200px]"

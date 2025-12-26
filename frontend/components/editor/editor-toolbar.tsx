@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useRef, useEffect } from "react";
 import type { Editor } from "@tiptap/react";
 import {
   Bold,
@@ -15,13 +16,10 @@ import {
   Minus,
   Undo,
   Redo,
-  Trash2,
-  ArrowUpFromLine,
-  ArrowDownFromLine,
-  ArrowLeftFromLine,
-  ArrowRightFromLine,
+  ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { TableGridPicker } from "./table-grid-picker";
 
 interface EditorToolbarProps {
   editor: Editor;
@@ -65,6 +63,27 @@ function ToolbarDivider() {
 }
 
 export function EditorToolbar({ editor }: EditorToolbarProps) {
+  const [showTablePicker, setShowTablePicker] = useState(false);
+  const tablePickerRef = useRef<HTMLDivElement>(null);
+
+  // Close table picker when clicking outside
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (tablePickerRef.current && !tablePickerRef.current.contains(e.target as Node)) {
+        setShowTablePicker(false);
+      }
+    }
+    if (showTablePicker) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showTablePicker]);
+
+  const handleInsertTable = (rows: number, cols: number) => {
+    editor.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run();
+    setShowTablePicker(false);
+  };
+
   return (
     <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 transition-colors">
       {/* Undo/Redo */}
@@ -177,69 +196,27 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
 
       <ToolbarDivider />
 
-      {/* Table */}
-      <ToolbarButton
-        onClick={() =>
-          editor
-            .chain()
-            .focus()
-            .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
-            .run()
-        }
-        title="Insert Table (3x3)"
-      >
-        <Table className="h-4 w-4" />
-      </ToolbarButton>
-
-      {/* Table Controls - only show when inside a table */}
-      {editor.isActive("table") && (
-        <>
-          <ToolbarDivider />
-          <ToolbarButton
-            onClick={() => editor.chain().focus().addRowBefore().run()}
-            title="Add row above"
-          >
-            <ArrowUpFromLine className="h-4 w-4" />
-          </ToolbarButton>
-          <ToolbarButton
-            onClick={() => editor.chain().focus().addRowAfter().run()}
-            title="Add row below"
-          >
-            <ArrowDownFromLine className="h-4 w-4" />
-          </ToolbarButton>
-          <ToolbarButton
-            onClick={() => editor.chain().focus().addColumnBefore().run()}
-            title="Add column left"
-          >
-            <ArrowLeftFromLine className="h-4 w-4" />
-          </ToolbarButton>
-          <ToolbarButton
-            onClick={() => editor.chain().focus().addColumnAfter().run()}
-            title="Add column right"
-          >
-            <ArrowRightFromLine className="h-4 w-4" />
-          </ToolbarButton>
-          <ToolbarDivider />
-          <ToolbarButton
-            onClick={() => editor.chain().focus().deleteRow().run()}
-            title="Delete row"
-          >
-            <Minus className="h-4 w-4 text-red-500" />
-          </ToolbarButton>
-          <ToolbarButton
-            onClick={() => editor.chain().focus().deleteColumn().run()}
-            title="Delete column"
-          >
-            <Minus className="h-4 w-4 rotate-90 text-red-500" />
-          </ToolbarButton>
-          <ToolbarButton
-            onClick={() => editor.chain().focus().deleteTable().run()}
-            title="Delete table"
-          >
-            <Trash2 className="h-4 w-4 text-red-500" />
-          </ToolbarButton>
-        </>
-      )}
+      {/* Table - with dropdown for grid picker */}
+      <div className="relative" ref={tablePickerRef}>
+        <button
+          type="button"
+          onClick={() => setShowTablePicker(!showTablePicker)}
+          title="Insert Table"
+          className={cn(
+            "flex items-center gap-0.5 p-2 rounded transition-colors text-gray-600 dark:text-gray-300",
+            "hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100",
+            showTablePicker && "bg-gray-200 dark:bg-gray-700"
+          )}
+        >
+          <Table className="h-4 w-4" />
+          <ChevronDown className="h-3 w-3" />
+        </button>
+        {showTablePicker && (
+          <div className="absolute top-full left-0 mt-1 z-50 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+            <TableGridPicker onSelect={handleInsertTable} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

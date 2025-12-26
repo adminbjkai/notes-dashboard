@@ -2,13 +2,18 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { RichTextEditor } from "@/components/editor/rich-text-editor";
+import { ArrowLeftRight, PanelTop } from "lucide-react";
+import { RichTextEditor, EditorToolbar, type Editor } from "@/components/editor/rich-text-editor";
 import { updateNote } from "@/lib/api";
+import { cn } from "@/lib/utils";
 import type { Note } from "@/types/note";
 
 interface PageEditorProps {
   page: Note;
 }
+
+const FULL_WIDTH_KEY = "editor-full-width";
+const SHOW_TOOLBAR_KEY = "editor-show-toolbar";
 
 /**
  * Document-style page editor with:
@@ -22,8 +27,35 @@ export function PageEditor({ page }: PageEditorProps) {
   const [content, setContent] = useState(page.content ?? "");
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [isFullWidth, setIsFullWidth] = useState(false);
+  const [showToolbar, setShowToolbar] = useState(true);
+  const [editor, setEditor] = useState<Editor | null>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const titleRef = useRef<HTMLTextAreaElement>(null);
+
+  // Load preferences from localStorage
+  useEffect(() => {
+    const storedWidth = localStorage.getItem(FULL_WIDTH_KEY);
+    if (storedWidth === "true") {
+      setIsFullWidth(true);
+    }
+    const storedToolbar = localStorage.getItem(SHOW_TOOLBAR_KEY);
+    if (storedToolbar === "false") {
+      setShowToolbar(false);
+    }
+  }, []);
+
+  const toggleFullWidth = () => {
+    const newState = !isFullWidth;
+    setIsFullWidth(newState);
+    localStorage.setItem(FULL_WIDTH_KEY, String(newState));
+  };
+
+  const toggleToolbar = () => {
+    const newState = !showToolbar;
+    setShowToolbar(newState);
+    localStorage.setItem(SHOW_TOOLBAR_KEY, String(newState));
+  };
 
   // Auto-resize title textarea
   useEffect(() => {
@@ -94,15 +126,64 @@ export function PageEditor({ page }: PageEditorProps) {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-8 py-12">
-      {/* Status indicator */}
-      <div className="mb-8 flex items-center justify-end gap-2 text-xs text-gray-400">
-        {isSaving ? (
-          <span>Saving...</span>
-        ) : lastSaved ? (
-          <span>Saved</span>
-        ) : null}
+    <div className={cn(
+      "mx-auto px-8 py-6 transition-all duration-200",
+      isFullWidth ? "max-w-none" : "max-w-3xl"
+    )}>
+      {/* Header with status and controls */}
+      <div className="mb-4 flex items-center justify-end gap-4 text-xs">
+        {/* Toolbar toggle */}
+        <button
+          type="button"
+          onClick={toggleToolbar}
+          title={showToolbar ? "Hide toolbar" : "Show toolbar"}
+          className={cn(
+            "p-1.5 rounded transition-colors",
+            showToolbar
+              ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
+              : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+          )}
+        >
+          <PanelTop className="h-4 w-4" />
+        </button>
+
+        {/* Full width toggle */}
+        <label className="flex items-center gap-2 cursor-pointer select-none">
+          <ArrowLeftRight className="h-4 w-4 text-gray-400" />
+          <span className="text-gray-500 dark:text-gray-400">Full width</span>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={isFullWidth}
+            onClick={toggleFullWidth}
+            className={cn(
+              "relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors",
+              isFullWidth
+                ? "bg-blue-600"
+                : "bg-gray-300 dark:bg-gray-600"
+            )}
+          >
+            <span
+              className={cn(
+                "inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform",
+                isFullWidth ? "translate-x-[18px]" : "translate-x-0.5"
+              )}
+            />
+          </button>
+        </label>
+
+        {/* Status indicator */}
+        <span className="text-gray-400">
+          {isSaving ? "Saving..." : lastSaved ? "Saved" : null}
+        </span>
       </div>
+
+      {/* Editor toolbar - above title */}
+      {showToolbar && editor && (
+        <div className="mb-4 -mx-8 px-8 py-1 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 transition-colors">
+          <EditorToolbar editor={editor} />
+        </div>
+      )}
 
       {/* Title - editable, looks like a heading */}
       <textarea
@@ -122,6 +203,7 @@ export function PageEditor({ page }: PageEditorProps) {
           onChange={handleContentChange}
           placeholder="Start writing, or press / for commands..."
           className="min-h-[60vh]"
+          onEditorReady={setEditor}
         />
       </div>
     </div>

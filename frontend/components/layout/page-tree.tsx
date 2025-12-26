@@ -858,13 +858,13 @@ export function PageTree({ pages }: PageTreeProps) {
   return (
     <div className="flex h-full flex-col">
       {/* New Page button at top */}
-      <div className="shrink-0 p-2 pb-0">
+      <div className="shrink-0 py-2 pr-2 pl-1 pb-0">
         <button
           type="button"
           onClick={() => handleCreatePage(null)}
           disabled={isCreating}
           className={cn(
-            "flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm text-gray-600 dark:text-gray-400",
+            "flex w-full items-center gap-2 rounded px-1 py-1.5 text-sm text-gray-600 dark:text-gray-400",
             "hover:bg-gray-100 dark:hover:bg-dark-elevated transition-colors",
             "disabled:opacity-50 disabled:cursor-not-allowed"
           )}
@@ -883,7 +883,7 @@ export function PageTree({ pages }: PageTreeProps) {
         onDragCancel={handleDragCancel}
         onDragEnd={handleDragEnd}
       >
-        <nav ref={navRef} className="relative flex-1 overflow-y-auto p-2">
+        <nav ref={navRef} className="relative flex-1 overflow-y-auto py-2 pr-2 pl-1">
           {/* Root drop zone - visible during drag */}
           <RootDropZone isActive={activeId !== null} />
           {tree.length === 0 && !isCreating ? (
